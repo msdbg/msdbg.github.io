@@ -456,13 +456,45 @@ class GlitchCursor {
   });
   
   document.addEventListener('mouseenter', () => {
-  if (this.cursor) {
-  this.cursor.style.opacity = '1';
-  }
+      if (this.cursor) {
+          this.cursor.style.opacity = '1';
+      }
   });
-  }
+
   
-  updateCursorPosition() {
+  document.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      this.mouseX = touch.clientX;
+      this.mouseY = touch.clientY;
+      this.updateCursorPosition();
+      
+      if (this.cursor) {
+          this.cursor.classList.add('clicking');
+          for (let i = 0; i < 5; i++) {
+              setTimeout(() => {
+                  const offsetX = (Math.random() - 0.5) * 20;
+                  const offsetY = (Math.random() - 0.5) * 20;
+                  this.createTrail(this.mouseX + offsetX, this.mouseY + offsetY);
+              }, i * 30);
+          }
+      }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      this.mouseX = touch.clientX;
+      this.mouseY = touch.clientY;
+      this.updateCursorPosition();
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+      if (this.cursor) {
+          this.cursor.classList.remove('clicking');
+      }
+  }, { passive: true });
+}
+
+updateCursorPosition() {
     if (this.cursor) {
       this.cursor.style.left = this.mouseX + 'px';
       this.cursor.style.top = this.mouseY + 'px';
