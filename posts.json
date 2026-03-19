@@ -11,7 +11,7 @@
       "assetsDir": "apex2-reversing-2026-03-09"
     },
     {
-      "id": "synthetix-v1-evading-edr",
+      "id": "synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring",
       "title": "Evading_EDR_Stack_Unwinders",
       "file": "evading-edr stack-unwinders-with-thread-stack-mirroring.md",
       "date": "2026-02-13",
