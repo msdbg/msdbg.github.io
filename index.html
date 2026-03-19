@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="MSDBG's Security Research Blog - Malware Analysis, Reverse Engineering, Threat Hunting, Vulnerability Research">
+<meta name="theme-color" content="#0a0a0a">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.ipify.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<title>[ MSDBG'S_BLOGSITE ]</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap">
+</head>
+<body>
+<div class="scanline"></div>
+<div class="noise"></div>
+
+<header class="header">
+<div class="glitch" data-text="[ MSDBG'S_BLOGSITE ]">[ MSDBG'S_BLOGSITE ]</div>
+<div class="subtitle">// unauthorized access logged</div>
+</header>
+
+<main class="terminal">
+<div class="terminal-header" id="terminal-header">
+<div id="terminal-output" class="terminal-output"></div>
+<div class="terminal-input-line">
+<span class="prompt">root@msdbg:~#</span>
+<input type="text" id="terminal-input" class="terminal-input" placeholder="cat /var/log/posts.log" autocomplete="off">
+</div>
+</div>
+
+<section id="posts" class="posts-container">
+<div id="posts-list" class="posts-list">
+<div class="loading">[ LOADING... ]</div>
+</div>
+</section>
+</main>
+
+<footer class="footer">
+<div class="footer-left">
+<span class="blink">●</span> CONNECTION_NOT_SECURE
+</div>
+<div class="footer-right">
+<span class="ip-address" id="ip-address"></span>
+<span class="battery" id="battery"></span>
+<span class="timestamp" id="timestamp"></span>
+</div>
+</footer>
+
+<div id="post-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<div class="modal-content">
+<button class="modal-close" id="modal-close-btn" aria-label="Close modal">[ X ]</button>
+<article id="post-content" class="post-article" aria-live="polite"></article>
+</div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+<script defer>
+
+window.addEventListener('load', function() {
+if (typeof marked === 'undefined') {
+console.warn('Marked library failed to load. Some features may not work.');
+}
+});
+</script>
+<script src="script.js" defer></script>
+</body>
+</html>

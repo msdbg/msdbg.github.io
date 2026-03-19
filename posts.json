@@ -1,0 +1,35 @@
+{
+  "posts": [
+    {
+      "id": "apex2-reversing",
+      "title": "APEX2_Reversing_Custom_Golang_Botnet",
+      "file": "apex2-reversing-a custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass.md",
+      "date": "2026-03-09",
+      "author": "msdbg",
+      "excerpt": "Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.",
+      "tags": ["malware", "reversing", "golang", "botnet"],
+      "assetsDir": "apex2-reversing-2026-03-09"
+    },
+    {
+      "id": "synthetix-v1-evading-edr",
+      "title": "Evading_EDR_Stack_Unwinders",
+      "file": "evading-edr stack-unwinders-with-thread-stack-mirroring.md",
+      "date": "2026-02-13",
+      "author": "msdbg",
+      "excerpt": "Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.",
+      "tags": ["edr", "evasion", "security", "windows"],
+      "assetsDir": "synthetix-v1-evading-edr-2026-02-13"
+    },
+		{
+			"id": "whoami",
+			"title": "whoami",
+			"file": "whoami.md",
+			"date": "2026-03-16",
+			"author": "msdbg",
+			"excerpt": "intro to whoami",
+			"tags": ["intro", "whoami"],
+			"pinned": true
+		}
+    
+  ]
+}
