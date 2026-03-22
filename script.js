@@ -13,18 +13,45 @@ class msdbgBlog {
     this.postContent = document.getElementById('post-content');
     this.modalCloseBtn = document.getElementById('modal-close-btn');
     this.timestampInterval = null;
+    this.isZooming = false;
     this.init();
   }
 
-async init() {
-this.timestampInterval = setInterval(() => this.updateTimestamp(), 1000);
-this.updateTimestamp();
-this.updateBattery();
-this.updateIpAddress();
-await this.loadPosts();
-this.setupEventListeners();
-this.handleHashChange();
-}
+  async init() {
+    this.timestampInterval = setInterval(() => {
+      if (!this.isZooming) {
+        this.updateTimestamp();
+      }
+    }, 1000);
+    this.updateTimestamp();
+    this.updateBattery();
+    this.updateIpAddress();
+    await this.loadPosts();
+    this.setupEventListeners();
+    this.handleHashChange();
+    this.setupZoomDetection();
+  }
+  
+  setupZoomDetection() {
+    let lastInnerWidth = window.innerWidth;
+    let lastInnerHeight = window.innerHeight;
+    let zoomTimeout = null;
+    
+    window.addEventListener('resize', () => {
+      const widthChanged = Math.abs(window.innerWidth - lastInnerWidth) > 30;
+      const heightChanged = Math.abs(window.innerHeight - lastInnerHeight) > 30;
+      
+      if (widthChanged || heightChanged) {
+        this.isZooming = true;
+        if (zoomTimeout) clearTimeout(zoomTimeout);
+        zoomTimeout = setTimeout(() => {
+          this.isZooming = false;
+          lastInnerWidth = window.innerWidth;
+          lastInnerHeight = window.innerHeight;
+        }, 500);
+      }
+    });
+  }
 
   updateTimestamp() {
     const timestamp = document.getElementById('timestamp');
@@ -303,17 +330,30 @@ class GlitchCursor {
   constructor() {
     this.cursor = null;
     this.trails = [];
-    this.maxTrails = 8;
+    this.maxTrails = 0; 
     this.mouseX = 0;
     this.mouseY = 0;
     this.lastTrailTime = 0;
-    this.trailInterval = 50;
-    
+    this.trailInterval = 200; 
+
     this.isDraggingScrollbar = false;
     this.scrollableElement = null;
     this.dragStartMouseY = 0;
     this.dragStartScrollTop = 0;
     this.dragStartThumbTop = 0;
+
+    
+    this.animationFrameId = null;
+    this.lastUpdateTime = 0;
+    this.updateThrottle = 16; // ~60fps max
+
+    
+    this.isZooming = false;
+    this.zoomTimeout = null;
+    this.lastInnerWidth = window.innerWidth;
+    this.lastInnerHeight = window.innerHeight;
+    this.trailsEnabled = false; 
+
     this.init();
   }
 
@@ -334,20 +374,23 @@ class GlitchCursor {
   }
 
   createTrail(x, y) {
+    
+    if (!this.trailsEnabled || document.hidden || this.isZooming) return;
+
     const trail = document.createElement('div');
     trail.className = 'cursor-trail';
     trail.style.left = x + 'px';
     trail.style.top = y + 'px';
     document.body.appendChild(trail);
 
-    
+
     setTimeout(() => {
       trail.remove();
-    }, 500);
+    }, 400);
 
     this.trails.push(trail);
 
-    
+
     if (this.trails.length > this.maxTrails) {
       const oldTrail = this.trails.shift();
       if (oldTrail && oldTrail.parentNode) {
@@ -357,13 +400,18 @@ class GlitchCursor {
   }
 
   setupEventListeners() {
-  document.addEventListener('mousemove', (e) => {
-  this.mouseX = e.clientX;
-  this.mouseY = e.clientY;
-  
-  
-  this.updateCursorPosition();
-  });
+    
+    document.addEventListener('mousemove', (e) => {
+      this.mouseX = e.clientX;
+      this.mouseY = e.clientY;
+      
+      
+      const now = Date.now();
+      if (now - this.lastUpdateTime >= this.updateThrottle) {
+        this.lastUpdateTime = now;
+        this.updateCursorPosition();
+      }
+    });
   
   
   document.addEventListener('scroll', (e) => {
@@ -428,19 +476,12 @@ class GlitchCursor {
   });
   
   
-  document.addEventListener('mousedown', () => {
-  if (this.cursor) {
-  this.cursor.classList.add('clicking');
-  
-  for (let i = 0; i < 5; i++) {
-  setTimeout(() => {
-  const offsetX = (Math.random() - 0.5) * 20;
-  const offsetY = (Math.random() - 0.5) * 20;
-  this.createTrail(this.mouseX + offsetX, this.mouseY + offsetY);
-  }, i * 30);
+    document.addEventListener('mousedown', () => {
+  if (this.cursor && !this.isZooming) {
+    this.cursor.classList.add('clicking');
+    
   }
-  }
-  });
+});
   
   document.addEventListener('mouseup', () => {
   if (this.cursor) {
@@ -461,51 +502,78 @@ class GlitchCursor {
       }
   });
 
-  
+    
   document.addEventListener('touchstart', (e) => {
-      const touch = e.touches[0];
-      this.mouseX = touch.clientX;
-      this.mouseY = touch.clientY;
-      this.updateCursorPosition();
+    const touch = e.touches[0];
+    this.mouseX = touch.clientX;
+    this.mouseY = touch.clientY;
+    this.updateCursorPosition();
+
+    if (this.cursor && !this.isZooming) {
+      this.cursor.classList.add('clicking');
       
-      if (this.cursor) {
-          this.cursor.classList.add('clicking');
-          for (let i = 0; i < 5; i++) {
-              setTimeout(() => {
-                  const offsetX = (Math.random() - 0.5) * 20;
-                  const offsetY = (Math.random() - 0.5) * 20;
-                  this.createTrail(this.mouseX + offsetX, this.mouseY + offsetY);
-              }, i * 30);
-          }
-      }
+    }
   }, { passive: true });
 
-  document.addEventListener('touchmove', (e) => {
+    document.addEventListener('touchmove', (e) => {
       const touch = e.touches[0];
       this.mouseX = touch.clientX;
       this.mouseY = touch.clientY;
-      this.updateCursorPosition();
-  }, { passive: true });
-
-  document.addEventListener('touchend', () => {
-      if (this.cursor) {
-          this.cursor.classList.remove('clicking');
+      
+      const now = Date.now();
+      if (now - this.lastUpdateTime >= this.updateThrottle) {
+        this.lastUpdateTime = now;
+        this.updateCursorPosition();
       }
-  }, { passive: true });
-}
+    }, { passive: true });
 
-updateCursorPosition() {
+    document.addEventListener('touchend', () => {
+      if (this.cursor) {
+        this.cursor.classList.remove('clicking');
+      }
+    }, { passive: true });
+
+    
+    window.addEventListener('resize', () => {
+      const widthChanged = Math.abs(window.innerWidth - this.lastInnerWidth) > 30;
+      const heightChanged = Math.abs(window.innerHeight - this.lastInnerHeight) > 30;
+
+      if (widthChanged || heightChanged) {
+        this.isZooming = true;
+        this.trailsEnabled = false;
+        
+        
+        this.trails.forEach(trail => trail.remove());
+        this.trails = [];
+        
+        if (this.zoomTimeout) clearTimeout(this.zoomTimeout);
+        this.zoomTimeout = setTimeout(() => {
+          this.isZooming = false;
+          this.trailsEnabled = true;
+          this.lastInnerWidth = window.innerWidth;
+          this.lastInnerHeight = window.innerHeight;
+        }, 500);
+      }
+    });
+
+    
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.isZooming = true;
+        this.trailsEnabled = false;
+      } else {
+        this.isZooming = false;
+        this.trailsEnabled = true;
+      }
+    });
+  }
+
+  updateCursorPosition() {
     if (this.cursor) {
       this.cursor.style.left = this.mouseX + 'px';
       this.cursor.style.top = this.mouseY + 'px';
     }
-
     
-    const now = Date.now();
-    if (now - this.lastTrailTime > this.trailInterval) {
-      this.createTrail(this.mouseX, this.mouseY);
-      this.lastTrailTime = now;
-    }
   }
 
   updateCursorForScrollbarDrag() {
@@ -999,11 +1067,157 @@ canvas.remove();
 }
 }
 
-    printLine(text, type = '') {
-        const line = document.createElement('div');
-        line.className = `output-line ${type}`;
-        line.innerHTML = text;
-        this.output.appendChild(line);
-        this.output.scrollTop = this.output.scrollHeight;
-    }
+ printLine(text, type = '') {
+ const line = document.createElement('div');
+ line.className = `output-line ${type}`;
+ line.innerHTML = text;
+ this.output.appendChild(line);
+ this.output.scrollTop = this.output.scrollHeight;
+ }
 }
+
+
+/**
+ * ImageZoom - Lightweight medium-zoom style image zoom functionality
+ * Activates on click, dismisses via backdrop click, Escape key, or scroll
+ */
+class ImageZoom {
+ constructor() {
+ this.overlay = null;
+ this.zoomedImage = null;
+ this.originalImage = null;
+ this.scrollPosition = 0;
+ this.isZoomed = false;
+ this.init();
+ }
+
+ init() {
+ this.createOverlay();
+ this.setupEventListeners();
+ }
+
+ createOverlay() {
+ 
+ this.overlay = document.createElement('div');
+ this.overlay.className = 'image-zoom-overlay';
+ this.overlay.setAttribute('role', 'dialog');
+ this.overlay.setAttribute('aria-modal', 'true');
+ this.overlay.setAttribute('aria-label', 'Zoomed image view');
+
+ 
+ this.zoomedImage = document.createElement('img');
+ this.zoomedImage.setAttribute('alt', 'Zoomed image');
+ this.overlay.appendChild(this.zoomedImage);
+
+ document.body.appendChild(this.overlay);
+ }
+
+ setupEventListeners() {
+ 
+ document.addEventListener('click', (e) => {
+ const img = e.target.closest('.post-article img');
+ if (img && !this.isZoomed) {
+ e.preventDefault();
+ e.stopPropagation();
+ this.zoom(img);
+ }
+ });
+
+ 
+ this.overlay.addEventListener('click', (e) => {
+ if (e.target === this.overlay) {
+ this.close();
+ }
+ });
+
+ 
+ document.addEventListener('keydown', (e) => {
+ if (e.key === 'Escape' && this.isZoomed) {
+ this.close();
+ }
+ });
+
+ 
+ let scrollTimeout = null;
+ window.addEventListener('scroll', () => {
+ if (this.isZoomed) {
+ 
+ if (scrollTimeout) clearTimeout(scrollTimeout);
+ scrollTimeout = setTimeout(() => {
+ if (this.isZoomed) {
+ this.close();
+ }
+ }, 50);
+ }
+ }, { passive: true });
+
+ 
+ window.addEventListener('resize', () => {
+ if (this.isZoomed) {
+ this.close();
+ }
+ }, { passive: true });
+
+ 
+ this.overlay.addEventListener('touchstart', (e) => {
+ if (e.target === this.overlay) {
+ e.preventDefault();
+ this.close();
+ }
+ }, { passive: false });
+ }
+
+ zoom(img) {
+ if (this.isZoomed) return;
+
+ this.originalImage = img;
+ this.isZoomed = true;
+
+
+ this.scrollPosition = window.scrollY;
+
+ 
+ const src = img.src;
+
+ 
+ this.zoomedImage.src = src;
+ this.zoomedImage.alt = img.alt || 'Zoomed image';
+
+ 
+ img.classList.add('zooming');
+
+
+ this.overlay.classList.add('active');
+
+ 
+ document.body.style.overflow = 'hidden';
+ }
+
+ close() {
+ if (!this.isZoomed) return;
+
+ this.isZoomed = false;
+
+ 
+ this.overlay.classList.remove('active');
+
+ 
+ if (this.originalImage) {
+ this.originalImage.classList.remove('zooming');
+ this.originalImage = null;
+ }
+
+ 
+ document.body.style.overflow = '';
+ }
+
+ 
+ refresh() {
+ 
+ }
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+ window.imageZoom = new ImageZoom();
+});
