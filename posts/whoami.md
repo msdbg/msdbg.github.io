@@ -26,7 +26,7 @@ I’m an independent security researcher. for the last several years, I’ve wor
 
 ---
 
-This blog is my public scratchpad. It’s where I'll drop Research and Intelligence on Malware Analysis, Reverse engineering, Exploit Development / Vulnerability Research and Threat hunting.
+This blog was my public scratchpad before now its a team effort of Offensive32 Labs It’s where we drop Research and Intelligence on Malware Analysis, Reverse engineering, Exploit Development / Vulnerability Research and Threat hunting.
 
 
 > *No fluff. Just code, offsets, and execution flow.*
