@@ -848,8 +848,7 @@ this.ipAddress = 'UNKNOWN';
       this.printLine('Contact:', 'success');
       this.printLine(' Email: contact@offensive32.com', '');
       this.printLine(' Website: <a href="https://offensive32.com" target="_blank" rel="noopener noreferrer">offensive32.com</a>', '');
-      
-    }
+	}
 
     handlePwd() {
         this.printLine('/home/Offensive32/blogsite', 'success');
