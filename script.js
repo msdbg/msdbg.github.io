@@ -5,7 +5,7 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-class msdbgBlog {
+class Offensive32Blog {
   constructor() {
     this.posts = [];
     this.postsContainer = document.getElementById('posts-list');
@@ -320,8 +320,8 @@ this.handleHashChange();
 
 
 function closeModal() {
-    if (window.msdbgBlog) {
-        window.msdbgBlog.closeModal();
+    if (window.Offensive32Blog) {
+        window.Offensive32Blog.closeModal();
     }
 }
 
@@ -345,7 +345,7 @@ class GlitchCursor {
     
     this.animationFrameId = null;
     this.lastUpdateTime = 0;
-    this.updateThrottle = 16; // ~60fps max
+    this.updateThrottle = 16;
 
     
     this.isZooming = false;
@@ -618,7 +618,7 @@ class GlitchCursor {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.msdbgBlog = new msdbgBlog();
+    window.Offensive32Blog = new Offensive32Blog();
     window.glitchCursor = new GlitchCursor();
     window.terminal = new Terminal();
 });
@@ -635,8 +635,8 @@ this.init();
 }
 
 async init() {
-  if (window.msdbgBlog && window.msdbgBlog.posts && window.msdbgBlog.posts.length > 0) {
-    this.posts = window.msdbgBlog.posts;
+  if (window.Offensive32Blog && window.Offensive32Blog.posts && window.Offensive32Blog.posts.length > 0) {
+    this.posts = window.Offensive32Blog.posts;
     this.postsLoaded = true;
   } else {
     await this.loadPosts();
@@ -663,8 +663,8 @@ console.error('Error loading posts:', error);
 }
 
     async fetchIpAddress() {
-if (window.msdbgBlog && window.msdbgBlog.cachedIp) {
-this.ipAddress = window.msdbgBlog.cachedIp;
+if (window.Offensive32Blog && window.Offensive32Blog.cachedIp) {
+this.ipAddress = window.Offensive32Blog.cachedIp;
 return;
 }
 try {
@@ -672,8 +672,8 @@ const response = await fetch('https://api.ipify.org?format=json');
 if (!response.ok) throw new Error('IP_FETCH_FAILED');
 const data = await response.json();
 this.ipAddress = data.ip;
-if (window.msdbgBlog) {
-window.msdbgBlog.cachedIp = data.ip;
+if (window.Offensive32Blog) {
+window.Offensive32Blog.cachedIp = data.ip;
 }
 } catch (error) {
 this.ipAddress = 'UNKNOWN';
@@ -846,13 +846,13 @@ this.ipAddress = 'UNKNOWN';
   
       this.printLine('');
       this.printLine('Contact:', 'success');
-      this.printLine(' Email: msdbg@tuta.io', '');
-      this.printLine(' GitHub: <a href="https://github.com/msdbg" target="_blank" rel="noopener noreferrer">github.com/msdbg</a>', '');
-      this.printLine(' X/Twitter: <a href="https://x.com/0xmsdbg" target="_blank" rel="noopener noreferrer">x.com/0xmsdbg</a>', '');
+      this.printLine(' Email: contact@offensive32.com', '');
+      this.printLine(' Website: Offensive32.com <a href="https://offensive32.com" target="_blank" rel="noopener noreferrer">offensive32.com</a>', '');
+      
     }
 
     handlePwd() {
-        this.printLine('/home/msdbg/blogsite', 'success');
+        this.printLine('/home/Offensive32/blogsite', 'success');
     }
 
     async handleWhoami() {
@@ -876,8 +876,8 @@ this.ipAddress = 'UNKNOWN';
                 }
             });
         } catch (error) {
-            this.printLine('msdbg', 'success');
-            this.printLine('Independent security researcher specializing in:', '');
+            this.printLine('offensive32', 'success');
+            this.printLine('Cybersecurity Botique specializing in:', '');
             this.printLine('  - Malware Analysis & Reverse Engineering', '');
             this.printLine('  - Adversary Simulation', '');
             this.printLine('  - Threat Hunting & Detection Engineering', '');
@@ -1077,10 +1077,6 @@ canvas.remove();
 }
 
 
-/**
- * ImageZoom - Lightweight medium-zoom style image zoom functionality
- * Activates on click, dismisses via backdrop click, Escape key, or scroll
- */
 class ImageZoom {
  constructor() {
  this.overlay = null;
