@@ -847,7 +847,7 @@ this.ipAddress = 'UNKNOWN';
       this.printLine('');
       this.printLine('Contact:', 'success');
       this.printLine(' Email: contact@offensive32.com', '');
-      this.printLine(' Website: Offensive32.com'');
+      this.printLine(' Website: Offensive32.com');
       
     }
 
