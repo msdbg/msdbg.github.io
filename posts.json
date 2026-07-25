@@ -7,7 +7,12 @@
       "date": "2026-03-09",
       "author": "msdbg",
       "excerpt": "Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.",
-      "tags": ["malware", "reversing", "golang", "botnet"],
+      "tags": [
+        "malware",
+        "reversing",
+        "golang",
+        "botnet"
+      ],
       "assetsDir": "apex2-reversing-2026-03-09"
     },
     {
@@ -17,19 +22,42 @@
       "date": "2026-02-13",
       "author": "msdbg",
       "excerpt": "Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.",
-      "tags": ["edr", "evasion", "security", "windows"],
+      "tags": [
+        "edr",
+        "evasion",
+        "security",
+        "windows"
+      ],
       "assetsDir": "synthetix-v1-evading-edr-2026-02-13"
     },
-		{
-			"id": "whoami",
-			"title": "whoami",
-			"file": "whoami.md",
-			"date": "2026-03-16",
-			"author": "msdbg",
-			"excerpt": "intro to whoami",
-			"tags": ["intro", "whoami"],
-			"pinned": true
-		}
-    
+    {
+      "id": "whoami",
+      "title": "whoami",
+      "file": "whoami.md",
+      "date": "2026-03-16",
+      "author": "msdbg",
+      "excerpt": "intro to whoami",
+      "tags": [
+        "intro",
+        "whoami"
+      ],
+      "pinned": true
+    },
+    {
+      "id": "the MITRE ATT&CK Tools Mindmap",
+      "title": "Mapping the Tools- the MITRE ATT&CK Tools Mindmap",
+      "file": "Mapping-Tools-with-MITRE-ATT&CK.md",
+      "date": "2026-07-25",
+      "author": "msdbg",
+      "excerpt": "A comprehensive mindmap of tools mapped to the MITRE ATT&CK framework, aiding in threat analysis and defense strategies.",
+      "tags": [
+        "MITRE",
+        "ATT&CK",
+        "tools",
+        "mindmap"
+      ],
+      "pinned": false,
+      "assetsDir": "mitre-tools-map-2026-07-25"
+    }
   ]
 }
