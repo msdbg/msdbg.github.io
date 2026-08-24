@@ -58,6 +58,22 @@
       ],
       "pinned": false,
       "assetsDir": "mitre-tools-map-2026-07-25"
+    },
+    {
+      "id": "Agent Burp Headless Agent First AppSec",
+      "title": "Is Future of Security Tools Headless ?: Meet AgentBurp",
+      "file": "AgentBurp-an-Agent-first-Designed-AppSec-tool.md",
+      "date": "2026-08-24",
+      "author": "msdbg",
+      "excerpt": "A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.",
+      "tags": [
+        "Burp",
+        "Bug Hunting",
+        "AppSec",
+        "AI Agents"
+      ],
+      "pinned": false,
+      "assetsDir": "agentburp-intro-blog-2026-08-24"
     }
   ]
 }
