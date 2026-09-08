@@ -44,7 +44,7 @@
       "pinned": true
     },
     {
-      "id": "the MITRE ATT&CK Tools Mindmap",
+      "id": "the-MITRE ATT&CK-Tools-Mindmap",
       "title": "Mapping the Tools- the MITRE ATT&CK Tools Mindmap",
       "file": "Mapping-Tools-with-MITRE-ATT&CK.md",
       "date": "2026-07-25",
@@ -60,7 +60,7 @@
       "assetsDir": "mitre-tools-map-2026-07-25"
     },
     {
-      "id": "Agent Burp Headless Agent First AppSec",
+      "id": "Agent-Burp-Headless-Agent-First-AppSec",
       "title": "Is Future of Security Tools Headless ?: Meet AgentBurp",
       "file": "AgentBurp-an-Agent-first-Designed-AppSec-tool.md",
       "date": "2026-08-24",
@@ -74,6 +74,22 @@
       ],
       "pinned": false,
       "assetsDir": "agentburp-intro-blog-2026-08-24"
+    },
+    {
+      "id": "Do-You-Still-Need-to-Learn-Programming-When-AI-Writes-Better-Code",
+      "title": "Do You Still Need to Learn Programming When AI Writes Better Code ?",
+      "file": "Do you need to learn programming when AI writes better code.md",
+      "date": "2026-09-8",
+      "author": "msdbg",
+      "excerpt": "A Thought about current state of programming language learning",
+      "tags": [
+        "Programming",
+        "Off Topic",
+        "Agentic Terminals",
+        "AI Agents"
+      ],
+      "pinned": false,
+      "assetsDir": "current-state-of-programming-2026-09-08"
     }
   ]
 }
