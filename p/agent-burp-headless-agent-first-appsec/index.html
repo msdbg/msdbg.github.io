@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is Future of Security Tools Headless ?: Meet AgentBurp | Offensive32 Labs Blog</title>
+<meta name="description" content="A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="msdbg">
+<link rel="canonical" href="https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Offensive32 Labs Blog">
+<meta property="og:title" content="Is Future of Security Tools Headless ?: Meet AgentBurp">
+<meta property="og:description" content="A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.">
+<meta property="og:url" content="https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Is Future of Security Tools Headless ?: Meet AgentBurp">
+<meta name="twitter:description" content="A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.">
+<meta name="o32:legacy-id" content="Agent-Burp-Headless-Agent-First-AppSec">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Is Future of Security Tools Headless ?: Meet AgentBurp", "description": "A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.", "datePublished": "2026-08-24", "author": {"@type": "Person", "name": "msdbg"}, "mainEntityOfPage": "https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/", "url": "https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/"}
+</script>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="noise"></div>
+<header class="header">
+<div class="glitch" data-text="[ OFFENSIVE32_LABS_BLOGSITE ]">[ OFFENSIVE32_LABS_BLOGSITE ]</div>
+<div class="subtitle">// unauthorized access logged</div>
+</header>
+<main class="terminal">
+<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/Agent-Burp-Headless-Agent-First-AppSec">open in terminal view</a></p>
+<article class="post-article">
+<h1>Is Future of Security Tools Headless ?: Meet AgentBurp</h1>
+<p class="post-meta">// DECRYPTED: 2026-08-24 | AUTHOR: msdbg | LEGACY: #post/Agent-Burp-Headless-Agent-First-AppSec</p>
+<div class="post-tags"><span class="tag">Burp</span><span class="tag">Bug Hunting</span><span class="tag">AppSec</span><span class="tag">AI Agents</span></div>
+<div class="post-body"><p>a Human security researcher sits in front of a GUI tool like Burp Suite and proxies their browser traffic, sends interesting requests to a Repeater, and clicks through various tabs to configure Intruder payloads or Active Scans, then we got Autonomous AI agents they use MCP to communicate with tools, take screenshots and move mouse and click buttons on their own.</p>
+<p>But GUI was made for humans. <strong>AI agents are not made to move mouse and click GUI buttons.</strong></p>
+<p>I experienced this bottleneck myself so decided to work on it, i call it <strong>AgentBurp</strong> an open-source, CLI-native, agent-first web application security testing tool.</p>
+<h2>The GUI Bottleneck</h2>
+<p>Recently, the gap between AI and traditional tools like Burp Suite has started to close. The introduction of MCP (Model Context Protocol) and native AI extensions allow LLMs to analyze proxy history, suggest payloads, and even drive Burp Suite to some extent.</p>
+<p>But, Using an MCP server to translate AI intent into proprietary API calls for a GUI tool works well but it is not what we asked for, really.</p>
+<h2>Why AgentBurp</h2>
+<p><img src="/assets/posts/agentburp-intro-blog-2026-08-24/agentburp-arch.png" alt="alt text" />
+AgentBurp is a single, lightweight, compiled Go binary to test web applications security, you can just give it to any Agent running in your terminal and it will know what to do the results depends on how good your LLM agent is and your system prompt, it has the proxy, fuzzer, crawler, repeater, and more. all that your LLM Agent needs to test an app without opening Burp.</p>
+<h3>1. Native Autonomy (CLI &amp; JSON)</h3>
+<p>Every single command in AgentBurp from <code>proxy start</code> to <code>fuzz run</code> to <code>scan active</code> supports a <code>--json</code> flag. It speaks the native language of AI agents and shell scripts. An autonomous agent doesn't need a translation layer, it can execute a command, instantly parse the structured JSON response, and autonomously decide what to attack next.</p>
+<h3>2. Open Data via SQLite</h3>
+<p>AgentBurp stores all project data (requests, responses, endpoints, findings) in a standard <strong>SQLite WAL database</strong>.
+So a AI Model doesn't even need to use the AgentBurp CLI to analyze a target. It can write a SQL query <code>SELECT * FROM requests WHERE method = 'POST'</code> to analyze traffic, track false positives, or build custom dashboards. The data is open and accessible.</p>
+<h3>3. Real-World Hardening</h3>
+<p>Simple CLI scanners (like <code>gobuster</code> or <code>nuclei</code>) make noise when faced with modern web applications with complex steps logins, complex OAuth flows, or WAF rate limits.
+I wanted AgentBurp to not be a dumb scanner. It includes custom stateful engines (Will Improve progressively):</p>
+<ul>
+<li><strong>Auth Macros:</strong> To bypass complex authentication flows.</li>
+<li><strong>Browser Sessions:</strong> Using headless Chrome (<code>go-rod</code>) to handle heavy JavaScript and DOM-based routing.</li>
+<li><strong>Adaptations:</strong> To automatically back off, rotate proxies, or switch transports when WAFs or rate limits are detected.</li>
+</ul>
+<h3>4. CI/CD Ready (SARIF 2.1)</h3>
+<p>Because it runs as a lightweight, CGO-free binary, you can drop it into any GitHub Action or Docker container. It natively exports findings in <strong>SARIF 2.1</strong>, integrating directly into GitHub Security alerts and GitLab dashboards without complex parsing.</p>
+<h2>Conclusion</h2>
+<p>So It is the toolkit for an <strong>autonomous AI agent</strong> that needs a lightweight and native engine tool to do the hacking on it's own where humans just review the findings.</p>
+<hr />
+<p>Repo Link: https://github.com/msdbg/AgentBurp</p>
+<p><em>Check out the repository, run <code>make dev</code>, and try running your first <code>agentburp scan passive --all --json</code> to see it in action.</em></p>
+<p>-msdbg</p>
+</div>
+<hr>
+<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/Agent-Burp-Headless-Agent-First-AppSec</code><br>
+Canonical (indexable): <code>https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/</code></p>
+<p><a href="/">&larr; back to terminal</a></p>
+</article>
+</main>
+<footer class="footer">
+<div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
+<div class="footer-right"><span>blog.offensive32.com</span></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX2_Reversing_Custom_Golang_Botnet | Offensive32 Labs Blog</title>
+<meta name="description" content="Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="msdbg">
+<link rel="canonical" href="https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Offensive32 Labs Blog">
+<meta property="og:title" content="APEX2_Reversing_Custom_Golang_Botnet">
+<meta property="og:description" content="Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.">
+<meta property="og:url" content="https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="APEX2_Reversing_Custom_Golang_Botnet">
+<meta name="twitter:description" content="Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.">
+<meta name="o32:legacy-id" content="apex2-reversing-a custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "APEX2_Reversing_Custom_Golang_Botnet", "description": "Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.", "datePublished": "2026-03-09", "author": {"@type": "Person", "name": "msdbg"}, "mainEntityOfPage": "https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/", "url": "https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/"}
+</script>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="noise"></div>
+<header class="header">
+<div class="glitch" data-text="[ OFFENSIVE32_LABS_BLOGSITE ]">[ OFFENSIVE32_LABS_BLOGSITE ]</div>
+<div class="subtitle">// unauthorized access logged</div>
+</header>
+<main class="terminal">
+<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/apex2-reversing-a%20custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass">open in terminal view</a></p>
+<article class="post-article">
+<h1>APEX2_Reversing_Custom_Golang_Botnet</h1>
+<p class="post-meta">// DECRYPTED: 2026-03-09 | AUTHOR: msdbg | LEGACY: #post/apex2-reversing-a custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass</p>
+<div class="post-tags"><span class="tag">malware</span><span class="tag">reversing</span><span class="tag">golang</span><span class="tag">botnet</span></div>
+<div class="post-body"><hr />
+<h1>APEX2: Reversing a Custom Golang Botnet with TLS-Spoofing and Cloudflare WAF Bypass</h1>
+<h2>Quick Reference</h2>
+<p>| Category | Field | Value |
+|----------|-------|-------|
+| <strong>REPORT</strong> | Title | APEX2: Reversing a Custom Golang Botnet with TLS-Spoofing and Cloudflare WAF Bypass |
+| | Date | 2026-03-09 |
+| | Author | msdbg |
+| | Org | Independent Research |
+| | TLP | TLP:CLEAR (Public Release) |
+| | | |
+| <strong>SAMPLE</strong> | SHA-256 | 21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7 |
+| | File Type | PE32 executable (Console) Intel 80386 |
+| | Size | 10,378,240 bytes (9.90 MB) |
+| | Compiler | Go (go1.24.0) - windows/386 |
+| | Subsystem | Windows CUI (Console) |
+| | Anti-Analysis | Aggressive process/window enumeration (x64dbg, Procmon), Syscall hook detection (NtQuerySystemInformation), Debugger check evasion, Time distortion checks |
+| | | |
+| <strong>THREAT CONTEXT</strong> | Actor GPS | Romania (Botmaster tracking as &quot;Apex&quot;) |
+| | Type | L4/L7 DDoS Botnet (Discord/Game/TLS/PPS Floods) |
+| | Platform | Cross-compiled (Windows analyzed, Linux/IoT suspected) |
+| | Frameworks | github.com/refraction-networking/utls (TLS Spoofing) |
+| | C2 Server | 45.128.118.140 (Hardcoded via Go -ldflags) |
+| | | |</p>
+<h2>Table of Contents</h2>
+<ol>
+<li>
+<p><strong><a href="#section-1--threat-landscape-the-shift-to-golang-botnets">Threat Landscape: The Shift to Golang Botnets</a></strong></p>
+<p>1.1 <a href="#11-the-appeal-of-go-concurrency--cross-compilation">The Appeal of Go: Concurrency &amp; Cross-Compilation</a></p>
+<p>1.2 <a href="#12-defeating-cloudflare-the-utls-spoofing-vector">Defeating Cloudflare: The uTLS Spoofing Vector</a></p>
+<p>1.3 <a href="#13-the-apex-lineage-from-p2p-to-centralized-floods">The &quot;Apex&quot; Lineage: From P2P to Centralized Floods</a></p>
+<p>1.4 <a href="#14-the-classification-why-automated-sandboxes-failed">The Misclassification: Why Automated Sandboxes Failed</a></p>
+</li>
+<li>
+<p><strong><a href="#section-2--abstract--initial-triage">Abstract &amp; Sample Triage</a></strong></p>
+<p>2.1 <a href="#21-abstract">Abstract</a></p>
+<p>2.2 <a href="#22-sample-corpus-target-identification">Sample Corpus (Target Identification)</a></p>
+<p>2.3 <a href="#23-infection-chain--kill-chain-overview">Infection Chain / Kill Chain Overview</a></p>
+<p>2.4 <a href="#23-infection-chain--kill-chain-overview">Dynamic Analysis: The &quot;Connecting to CNC&quot; Decoy Loop</a></p>
+</li>
+<li>
+<p><strong><a href="#section-3--defeating-anti-analysis-the-evasion-module">Defeating Anti-Analysis (The &quot;Evasion Module&quot;)</a></strong></p>
+<p>3.1 <a href="#31-tooling-enumeration-x64dbg-procmon-wireshark">Tooling Enumeration (x64dbg, Procmon, Wireshark)</a></p>
+<p>3.2 <a href="#32-syscall-hook-detection-ntqueryinformationprocess">Syscall Hook Detection (NtQueryInformationProcess)</a></p>
+<p>3.3 <a href="#33-the-evasion-checks-in-memory">the Evasion Checks in Memory</a></p>
+</li>
+<li>
+<p><strong><a href="#section-4--core-functionality--analyzing-the-go-build-artifacts">Core Functionality — Analyzing the Go Build Artifacts</a></strong></p>
+<p>4.1 <a href="#41-extracting-the-build-configuration--c2-ldflags">Extracting the Build Configuration &amp; C2 (LDFLAGS)</a></p>
+<p>4.2 <a href="#42-reversing-the-flood-methods">Reversing the Flood Methods</a></p>
+<pre><code>4.2.1 [DiscordFlood &amp; GameFlood](#421-discordflood--gameflood)
+
+4.2.2 [TLSFlood &amp; TLSPlusBypassFlood](#422-tlsflood--tlsplusbypassflood)
+</code></pre>
+<p>4.3 <a href="#43-concurrency-architecture-goroutine-deployment">Concurrency Architecture (Goroutine Deployment)</a></p>
+</li>
+<li>
+<p><strong><a href="#section-5--network-protocol--infrastructure">Network Protocol &amp; Infrastructure</a></strong></p>
+<p>5.1 <a href="#51-utls-client-hello-fingerprinting--proxy-routing">uTLS Client Hello Fingerprinting</a></p>
+<p>5.2 <a href="#52-c2-communication-format">C2 Communication Format</a></p>
+</li>
+<li>
+<p><strong><a href="#section-6--iocs--detection-engineering">IoCs &amp; Detection Engineering</a></strong></p>
+</li>
+<li>
+<p><strong><a href="#section-7--bonus-the-architectural-advantages-of-golang-in-botnet-development">Why Golang is perfect for Botnets</a></strong></p>
+</li>
+</ol>
+<hr />
+<h2>Section 1 — Threat Landscape: The Shift to Golang Botnets</h2>
+<h3>1.1 The Appeal of Go: Concurrency &amp; Cross-Compilation</h3>
+<p>Since 2019 we've seen wide adoption of Golang by Maldevs. Today I bring you a fresh Golang botnet with some interesting checks. In the end, you'll know why Golang is perfect for Botnet development.</p>
+<ul>
+<li><strong>Goroutines</strong>: Go's lightweight concurrency model allows a single infected machine to spawn tens of thousands of simultaneous network threads (goroutines) with minimal CPU and memory overhead, maximizing the volume of a packet flood.</li>
+<li><strong>Cross-Compilation</strong>: With a single codebase, the botmaster can execute <code>GOOS=windows GOARCH=386</code> or <code>GOOS=linux GOARCH=amd64</code> to instantly generate payloads for Windows desktops, Linux servers, and IoT devices.</li>
+</ul>
+<h3>1.2 Defeating Cloudflare: The uTLS Spoofing Vector</h3>
+<p>Modern DDoS attacks at Layer 7 (Application Layer) struggle against WAFs like Cloudflare. Standard Golang HTTP clients have a highly recognizable TLS Client Hello fingerprint (JA3/JA4).</p>
+<p>To bypass this, modern botnets statically compile the <code>github.com/refraction-networking/utls</code> library. This library allows the malware to spoof its cryptographic fingerprint, mimicking a legitimate Google Chrome, Firefox, or iOS Safari browser during the TLS handshake, effortlessly bypassing standard WAF DDoS protections.</p>
+<h3>1.3 The &quot;Apex&quot; Lineage: From P2P to Centralized Floods</h3>
+<p>The analysis of this sample (<code>apex2/Bot</code>) reveals a centralized C2, with a hardcoded IP (<code>45.128.118.140</code>) injected directly into the binary at compile time via Go's <code>-ldflags</code>. The presence of methods like <code>DiscordFlood</code> and <code>GameFlood</code> indicates the actor targets gaming infrastructure and VOIP communities alongside traditional enterprise web servers.</p>
+<p><img src="/assets/posts/apex2-reversing-2026-03-09/image%20%282%29%20%281%29.png" alt="alt text" />
+<img src="/assets/posts/apex2-reversing-2026-03-09/image%20%283%29%20%281%29.png" alt="alt text" /></p>
+<h3>1.4 The Classification: Why Automated Sandboxes Failed</h3>
+<p>Because Go binaries are natively large (10MB+) and statically linked, they generate significant noise. Apex2 specifically includes an aggressive anti-analysis module. When detonated in commercial sandboxes (which use user-land hooking and hypervisors), Apex2 detects the hooks (<code>HookedNtQuerySystemInformation</code>), identifies the analysis tools (<code>Procmon64.exe</code>, <code>x64dbg.exe</code>), and intentionally stifles its core botnet threads, entering a benign loop. Sandboxes, lacking the capability to analyze the dormant Go functions, relied on incorrect crowd-sourced YARA tags.</p>
+<hr />
+<h2>Section 2 — Abstract &amp; Initial Triage</h2>
+<h3>2.1 Abstract</h3>
+<p>This report details the reverse engineering and deobfuscation of a massive, 9.90 MB Golang executable originally misclassified in public threat repositories (such as MalwareBazaar) as Lumma Stealer. Our analysis definitively reclassifies this payload as <strong>Apex2</strong>, a highly evasive Golang DDoS botnet that executes Layer 7 Application floods.</p>
+<p>The Apex2 botnet leverages the <code>github.com/refraction-networking/utls</code> framework to actively spoof cryptographic TLS Client Hello fingerprints (mimicking Chrome, Firefox, and Safari) to bypass modern Web Application Firewalls (WAFs) like Cloudflare. This write-up documents the defeat of its aggressive anti-analysis module—which monitors for user-land API hooks (e.g., <code>HookedNtQuerySystemInformation</code>) and enumerates debugging tools (<code>x64dbg</code>, <code>Procmon</code>)—and details the extraction of its hardcoded Command and Control (C2) infrastructure (<code>45.128.118.140</code>). Furthermore, we reconstruct its complete JSON-based C2 tasking schema and document its array of specialized attack vectors, including <code>DiscordFlood</code>, <code>GameFlood</code>, and <code>TLSPlusBypassFlood</code>.</p>
+<h3>2.2 Sample Corpus (Target Identification)</h3>
+<blockquote>
+<p><strong>Note:</strong> The primary sample analyzed in this report was initially tagged by crowd-sourced threat intelligence platforms as LummaStealer. Automated commercial sandboxes failed to properly classify the payload due to its aggressive debugger-evasion routines causing the malware to abort its primary execution threads.</p>
+</blockquote>
+<p><strong>Primary Sample (Apex2 Botnet Payload)</strong></p>
+<p>| Attribute | Value |
+|---|---|
+| File Name | 21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7.exe |
+| SHA-256 | 21B19D07A414AD1FF7443C21C6530D1164C6C1EAE56D3619A422D3F311B580B7 |
+| SHA-1 | 2AA67CB6142373C7AEC4D7278051D27C6CF3005F |
+| MD5 | CC4B92FAE19C44F7115E7C8BDA7CAC70 |
+| File Size | 10,378,240 bytes (9.90 MB) |
+| File Type | PE32 executable (Intel 80386) |
+| Compiler/Linker | Go (go1.24.0) / Microsoft Linker 3.0 |
+| Subsystem | Windows CUI (Console) |
+| Internal Name | apex2/Bot (Recovered from Go build artifacts) |
+| C2 Infrastructure | 45.128.118.140 (Compiled via -ldflags) |</p>
+<h3>2.3 Infection Chain / Kill Chain Overview</h3>
+<p>Unlike Information Stealers that prioritize immediate exfiltration and self-deletion, the Apex2 botnet is designed for high-availability persistence and sustained network attacks. Its operational life cycle can be broken down into four distinct phases:</p>
+<p><img src="/assets/posts/apex2-reversing-2026-03-09/kill-chain-apex%20%281%29.jpg" alt="alt text" /></p>
+<ol>
+<li>
+<p><strong>Delivery &amp; Execution</strong>
+Apex2 payloads are typically distributed as secondary payloads via opportunistic initial access campaigns (e.g., SSH/RDP brute forcing, malicious spam attachments, or dropped by Initial Access Brokers). Upon execution, the 10MB Go binary initializes a console host but hides the window from the user.</p>
+</li>
+<li>
+<p><strong>Anti-Analysis &amp; Environment Verification</strong>
+Before establishing network communications, Apex2 sweeps the host environment. It enumerates running processes looking for a vast blacklist of reverse-engineering tools (e.g., <code>x32dbg.exe</code>, <code>Procmon64.exe</code>, <code>Wireshark.exe</code>). It also inspects loaded DLLs for injected user-land hooks indicative of sandbox monitoring (e.g., <code>HookedNtCreateThread</code>). If detected, the botnet gracefully aborts its attack threads and enters a benign infinite loop, outputting a decoy <code>Connecting to CNC...</code> message.</p>
+<p><img src="/assets/posts/apex2-reversing-2026-03-09/image%20%284%29%20%281%29.png" alt="alt text" /></p>
+<p><img src="/assets/posts/apex2-reversing-2026-03-09/image.png" alt="alt text" /></p>
+</li>
+<li>
+<p><strong>C2 Registration &amp; Heartbeat</strong>
+If the environment is deemed safe, the bot initiates a TCP connection to its hardcoded C2 server (<code>45.128.118.140</code>). It transmits a hardware fingerprint and environment profile via the <code>REGISTER windows 386</code> protocol, signaling to the botmaster that a new node is available for tasking. The bot then maintains a persistent listening loop waiting for JSON-formatted operational directives.</p>
+</li>
+<li>
+<p><strong>Flood Execution &amp; WAF Evasion</strong>
+Upon receiving a valid JSON task (containing keys such as <code>&quot;method&quot;</code>, <code>&quot;target&quot;</code>, and <code>&quot;duration&quot;</code>), the bot parses the command and deploys hundreds of concurrent Goroutines. Depending on the method requested, it may:</p>
+<ul>
+<li>Download a list of SOCKS4/5 or HTTP proxies.</li>
+<li>Initialize the <code>refraction-networking/utls</code> library to randomize its TLS Client Hello.</li>
+<li>Append modern Chromium/Safari HTTP headers (<code>sec-ch-ua</code>, <code>sec-fetch-dest</code>) and execute a volumetric Layer 7 flood against the target, successfully blending in with legitimate web traffic to bypass mitigation systems like Cloudflare.</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h2>Section 3 — Defeating Anti-Analysis (The &quot;Evasion Module&quot;)</h2>
+<p>A defining characteristic of the Apex2 botnet is its aggressive, multi-layered evasion module. This module is directly responsible for the payload's high failure rate in automated commercial sandboxes, which ultimately led to its misclassification as a generic stealer variant. Apex2 executes these checks immediately after loading into memory, neutralizing its core network threads.</p>
+<h3>3.1 Tooling Enumeration (x64dbg, Procmon, Wireshark)</h3>
+<p>Before initiating its C2 heartbeat, the botnet constructs an extensive blacklist of executable names associated with reverse engineering and dynamic analysis.</p>
+<p>Static analysis of the unpacked payload within IDA Pro reveals the initialization of this blacklist array. The malware loads string pointers for over two dozen analysis tools, explicitly targeting debuggers, network sniffers, and system monitors:</p>
+<ul>
+<li><code>wireshark.exe</code>, <code>procmon64.exe</code></li>
+<li><code>x32dbg.exe</code>, <code>x64dbg.exe</code>, <code>ollydbg.exe</code></li>
+<li><code>idaq64.exe</code></li>
+</ul>
+<p><img src="/assets/posts/apex2-reversing-2026-03-09/image%20%285%29%20%281%29.png" alt="alt text" /></p>
+<p>The malware then enumerates the host's running processes (likely utilizing standard API calls such as <code>CreateToolhelp32Snapshot</code> or <code>EnumProcesses</code>). If any process hash or name matches an entry in this array, Apex2 aborts the execution of its DDoS Goroutines.</p>
+<h3>3.2 Syscall Hook Detection (NtQueryInformationProcess)</h3>
+<p>Sandboxes and EDRs monitor malware behavior by injecting a monitoring DLL into the process and placing inline hooks (typically <code>JMP 0xE9</code> instructions) at the prologue of critical Native APIs (Syscalls) inside <code>ntdll.dll</code>.</p>
+<p>Apex2 detects these user-land hooks. Disassembly reveals explicit checks and logging strings tailored to identify tampering on highly specific APIs:</p>
+<ul>
+<li><code>HookedNtQuerySystemInformation</code></li>
+<li><code>HookedNtSetInformationThread</code></li>
+<li><code>HookedNtQueryObject</code></li>
+</ul>
+<p><img src="/assets/posts/apex2-reversing-2026-03-09/image%20%286%29%20%281%29.png" alt="alt text" /></p>
+<p>By inspecting the first few bytes of these loaded functions in memory, Apex2 determines if its execution is being monitored. The targeting of APIs like <code>NtSetInformationThread</code> (often used to hide threads from debuggers) and <code>NtQuerySystemInformation</code> indicates the malware gets context to act stealthy.</p>
+<h3>3.3 the Evasion Checks in Memory</h3>
+<p>During dynamic analysis, these checks required a multi-pronged approach:</p>
+<p>Because the Go executable is heavily flattened and relies on complex state machines, manually patching every hook and process check via IDA Pro is inefficient. The optimal way is freezing the process via a hardware breakpoint on <code>kernel32.ResumeThread</code> during the <code>RunPE</code> injection phase, and extracting the raw, unpacked RW memory regions to disk. This allows for static analysis of the unencrypted strings and logic without triggering the runtime protections.</p>
+<hr />
+<h2>Section 4 — Core Functionality — Analyzing the Go Build Artifacts</h2>
+<p>Due to the nature of statically compiled Golang binaries, traditional reverse engineering is vastly accelerated by analyzing the leftover build metadata. Memory carving of the <code>apex2/Bot</code> module revealed a complete list of dependencies, compiler flags, and method structures that define the botnet's offensive capabilities.</p>
+<h3>4.1 Extracting the Build Configuration &amp; C2 (LDFLAGS)</h3>
+<p>During compilation, Golang allows developers to pass linker flags (<code>-ldflags</code>) to inject variables directly into the binary at build time. Apex2 utilizes this feature to generate unique payloads for specific campaigns without altering the source code.</p>
+<p>Extraction of the Go build info block from memory revealed the exact compile command used for this payload:</p>
+<p><code>build -ldflags=&quot;-X main.ServerIP=45.128.118.140&quot;</code></p>
+<p><img src="/assets/posts/apex2-reversing-2026-03-09/image%20%287%29.png" alt="alt text" /></p>
+<p>This confirms that the C2 infrastructure (<code>45.128.118.140</code>) is hardcoded into the <code>main.ServerIP</code> variable. Furthermore, the flags <code>CGO_ENABLED=0</code>, <code>GOOS=windows</code>, and <code>GOARCH=386</code> indicate a deliberate cross-compilation strategy, ensuring the payload can run on legacy 32-bit Windows systems without requiring external C libraries.</p>
+<h3>4.2 Reversing the Flood Methods</h3>
+<p>The core objective of Apex2 is volumetric and application-layer Denial of Service. Analysis of the <code>apex2/Methods</code> namespace identified multiple distinct attack vectors, tailored for different target profiles.</p>
+<h4>4.2.1 DiscordFlood &amp; GameFlood</h4>
+<p>Disassembly of <code>apex2_Methods_DiscordFlood_func1</code> reveals a reliance on the <code>net.DialTimeout</code> API rather than standard HTTP clients. This indicates a Layer 4 (Transport Layer) attack methodology.</p>
+<p>The bot rapidly opens raw TCP or UDP sockets to the target port, writing raw byte arrays (<code>io.Writer.Write</code>) and closing the connection or holding it open to exhaust the target's connection pool. This method is highly effective against gaming servers and VOIP infrastructure (like Discord voice nodes) that rely on persistent, low-latency socket connections.</p>
+<h4>4.2.2 TLSFlood &amp; TLSPlusBypassFlood</h4>
+<p>To attack hardened web infrastructure, Apex2 deploys its Layer 7 HTTP/TLS floods. Static analysis of <code>apex2_Methods_TLSPlusBypassFlood_func1</code> shows the bot actively bypassing Go's native TLS implementation, routing connections through <code>apex2_Methods_dialUTLS</code>.</p>
+<p>This explicitly invokes the <code>refraction-networking/utls</code> library to spoof the JA3/JA4 cryptographic fingerprints of the TLS Client Hello packet. Furthermore, the inclusion of the <code>andybalholm/brotli</code> and <code>klauspost/compress</code> libraries ensures the bot can perfectly mimic a modern browser's <code>Accept-Encoding: gzip, deflate, br</code> headers. By presenting a valid TLS fingerprint and accepting modern compression algorithms, the bot's requests seamlessly bypass JavaScript challenges and rate-limits imposed by services like Cloudflare.</p>
+<h3>4.3 Concurrency Architecture (Goroutine Deployment)</h3>
+<p>To maximize attack volume, Apex2 heavily leverages Golang's concurrency model. The presence of functions appended with <code>.func1</code> and <code>.gowrap1</code> (e.g., <code>apex2_Methods_GameFlood_func1_deferwrap1</code>) indicates the widespread use of Goroutines.</p>
+<p>When the C2 issues an attack command, the main thread parses the <code>&quot;threads&quot;</code> JSON value and dispatches thousands of lightweight Goroutines simultaneously. The extensive use of <code>deferwrap</code> functions ensures that if a single socket crashes or times out during the flood, the panic is caught and recovered without crashing the entire botnet payload.</p>
+<hr />
+<h2>Section 5 — Network Protocol &amp; Infrastructure</h2>
+<p>Apex2 departs from traditional HTTP-polling botnets by utilizing a combination of raw TCP sockets for C2 registration and highly customized HTTP/TLS clients for its offensive operations. The botnet's infrastructure is specifically hardened to bypass geographic blocks, IP reputation filters, and Layer 7 caching mechanisms.</p>
+<h3>5.1 uTLS Client Hello Fingerprinting &amp; Proxy Routing</h3>
+<p>To ensure its volumetric floods actually reach the target application layer, Apex2 must bypass intermediary Web Application Firewalls (WAFs).</p>
+<p><strong>Proxy Ingestion:</strong>
+To circumvent IP-based rate limiting, the bot routes its malicious traffic through extensive proxy networks. Static analysis reveals the malware utilizes <code>os.Open</code> and <code>bufio.NewScanner</code> to parse proxy lists (e.g., <code>proxy/tlsplusbypass.txt</code>) line-by-line. This memory-efficient ingestion method allows the bot to cycle through thousands of SOCKS4/5 or HTTP proxies during a prolonged flood without crashing the host due to memory exhaustion.</p>
+<p><strong>TLS Forgery &amp; Randomization:</strong>
+When executing a Layer 7 attack (such as <code>TLSPlusBypassFlood</code>), the bot dynamically constructs a <code>net/http.Transport</code> and <code>crypto/tls.Config</code> object. Instead of relying on Go's default cryptographic footprint, it passes this custom transport through the <code>refraction-networking/utls</code> library.</p>
+<p>To prevent WAFs from generating a signature based on static attack patterns, the bot implements a randomization engine. Disassembly shows the bot seeding <code>math/rand</code> with <code>time.Now().UnixNano()</code> and utilizing <code>rand.Intn</code>. This is used to dynamically rotate through its hardcoded array of modern browser User-Agents and append randomized query parameters to the target URI, ensuring every HTTP request appears unique and forcing the target server to process the load dynamically rather than serving a cached response.</p>
+<h3>5.2 C2 Communication Format</h3>
+<p>Apex2 relies on a centralized, hardcoded C2 server (<code>45.128.118.140</code>). Communication is initiated by the bot, which acts as a persistent listener for operational directives.</p>
+<ol>
+<li>
+<p><strong>The Handshake:</strong>
+Upon successful execution and evasion of analysis environments, the bot opens a connection to the C2 and transmits a plaintext registration string:</p>
+<p><code>REGISTER windows 386</code></p>
+<p>This informs the botmaster of the available architecture, allowing them to segment their swarm for specific attack types.</p>
+</li>
+<li>
+<p><strong>The JSON Tasking Schema:</strong>
+Commands are issued from the C2 to the infected swarm using a structured JSON payload. The bot receives the byte stream and utilizes <code>encoding/json.Unmarshal</code> to deserialize the command into an internal Go struct. Memory carving exposed the exact schema expected by the bot:</p>
+<ul>
+<li><code>&quot;method&quot;</code>: (e.g., <code>&quot;DiscordFlood&quot;</code>, <code>&quot;TLSFlood&quot;</code>)</li>
+<li><code>&quot;target&quot;</code>: The victim IP or URL.</li>
+<li><code>&quot;port&quot;</code>: The target port.</li>
+<li><code>&quot;threads&quot;</code>: The number of concurrent Goroutines to spawn.</li>
+<li><code>&quot;duration&quot;</code>: The attack length in seconds.</li>
+<li><code>&quot;ratelimit&quot;</code>: Throttling parameters to avoid immediate upstream disconnection.</li>
+</ul>
+</li>
+</ol>
+<p>Upon completion of the <code>&quot;duration&quot;</code> window, the bot terminates the attack Goroutines and transmits a status message back to the C2 (e.g., <code>[CF] Attack finished</code>), before returning to a dormant listening state.</p>
+<hr />
+<h2>Section 6 — IoCs &amp; Detection Engineering</h2>
+<p>The following Indicators of Compromise (IoCs) and YARA logic are provided to accurately detect and hunt for the Apex2 botnet family.</p>
+<h3>6.1 Network Indicators (C2 &amp; Infrastructure)</h3>
+<p>| Type | Indicator | Description |
+|---|---|---|
+| IPv4 | 45.128.118.140 | Hardcoded Apex2 Command &amp; Control Server. |
+| Protocol | REGISTER windows 386 | Initial plaintext heartbeat / registration string. |</p>
+<h3>6.2 Host-Based Indicators (File Hashes)</h3>
+<p>| Type | Hash | Note |
+|---|---|---|
+| SHA-256 | 21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7 | Apex2 Go Payload (Analyzed) |
+| MD5 | CC4B92FAE19C44F7115E7C8BDA7CAC70 | Apex2 Go Payload (Analyzed) |</p>
+<h3>6.3 Memory &amp; Artifact Indicators</h3>
+<ul>
+<li>Internal Go Build Path: <code>path apex2/Bot</code></li>
+<li>Internal Module Name: <code>apex2/Methods</code></li>
+<li>File References: <code>proxy/tlsplusbypass.txt</code></li>
+</ul>
+<h3>6.4 YARA Detection Rule</h3>
+<p>This rule is designed to scan memory dumps or unpacked payloads, targeting the unique combination of the botnet's internal Go paths, its specific TLS spoofing dependencies, and its bespoke anti-analysis strings.</p>
+<pre><code>rule APT_Apex2_Golang_Botnet_Memory {
+
+    meta:
+        author = &quot;Independent Research&quot;
+        description = &quot;Detects unpacked Apex2 Golang DDoS Botnet in memory, differentiating it from Lumma Stealer misclassifications.&quot;
+        date = &quot;2026-03-09&quot;
+        threat_type = &quot;DDoS Botnet / WAF Bypass&quot;
+        tlp = &quot;CLEAR&quot;
+
+    strings:
+        // Go Build Metadata &amp; Packages
+        $go_build1 = &quot;path\x09apex2/Bot&quot; ascii
+        $go_build2 = &quot;mod\x09apex2&quot; ascii
+        $pkg_utls = &quot;github.com/refraction-networking/utls&quot; ascii
+        // C2 Handshake &amp; Operations
+        $c2_register = &quot;REGISTER windows 386&quot; ascii
+        $c2_decoy = &quot;Connecting to CNC...&quot; ascii
+        $atk_cf = &quot;[CF] Attack finished&quot; ascii
+        // Bespoke Evasion Module
+        $evade_sys1 = &quot;HookedNtQuerySystemInformation&quot; ascii
+        $evade_sys2 = &quot;HookedNtSetInformationThread&quot; ascii
+        $evade_dbg = &quot;Malware called ResumeThread&quot; ascii
+        $evade_err = &quot;Failed to find fixed version info signature in ntdll.dll&quot; ascii
+
+    condition:
+        uint16(0) == 0x5A4D // PE Header (MZ)
+        and (
+            all of ($go_build*)
+            or 3 of ($c2_*)
+            or 3 of ($evade_*)
+            or ($pkg_utls and 1 of ($go_build*) and 1 of ($evade_*))
+        )
+}
+</code></pre>
+<hr />
+<h2>Section 7 — Why Golang is perfect for Botnets</h2>
+<p>The discovery of the Apex2 and other botnets underscores a definitive trend in the threat landscape: <strong>Golang has emerged as a premier ecosystem for botmasters.</strong> The language's native architecture, memory management, and compiler design provide a suite of built-in features that perfectly align with the operational requirements of a high-performance, evasive DDoS array.</p>
+<h3>7.1 Weaponized Concurrency (Goroutines)</h3>
+<p>A botnet's lethality is dictated by its concurrent throughput—the volume of simultaneous network connections it can sustain against a target. Golang addresses this natively through &quot;Goroutines.&quot;</p>
+<ul>
+<li><strong>Lightweight Execution:</strong> Goroutines are user-space threads managed entirely by the Go runtime scheduler, starting with an initial stack size of approximately 2KB.</li>
+<li><strong>Multiplexing:</strong> The Go scheduler highly efficiently multiplexes thousands of these Goroutines onto a small number of actual OS-level threads.</li>
+<li><strong>Attack Application:</strong> In the context of Apex2, this means an infected node can effortlessly spawn 50,000+ concurrent attack loops (as parsed from the <code>&quot;threads&quot;</code> JSON C2 command) with minimal CPU and memory overhead. This transforms even a low-resource compromised desktop or IoT device into a devastating, high-volume DDoS cannon without crashing the host OS.</li>
+</ul>
+<h3>7.2 Frictionless Cross-Compilation</h3>
+<p>Botnets achieve critical mass by infecting diverse, heterogeneous environments, ranging from Windows enterprise endpoints to Linux cloud servers and ARM/MIPS-based edge routers.</p>
+<ul>
+<li><strong>Native Environment Variables:</strong> The Go toolchain natively supports cross-compilation out of the box. A bot developer simply defines the target environment via the <code>GOOS</code> (Operating System) and <code>GOARCH</code> (Architecture) variables during the build process.</li>
+<li><strong>Attack Application:</strong> As observed in the Apex2 memory artifacts (<code>GOOS=windows GOARCH=386</code>), the botmaster uses a single, unified codebase to generate highly optimized payloads for virtually any architecture. This enables rapid weaponization across different platforms without needing to manage complex, platform-specific build chains.</li>
+</ul>
+<h3>7.3 Statically Linked Portability</h3>
+<p>Malware execution frequently fails if the victim machine lacks a required runtime environment, framework, or shared library.</p>
+<ul>
+<li><strong>The Fat Binary:</strong> The Go compiler statically links the entire Go runtime, the garbage collector, and all imported packages directly into a single executable binary.</li>
+<li><strong>Attack Application:</strong> While this results in large file sizes, but offers portability. The payload is entirely self-contained and operates completely independent of the host's installed libraries. When an Apex2 payload drops on a target, it guarantees a maximized infection-to-active-node ratio.</li>
+</ul>
+<h3>7.4 A Modern, Web-Native Standard Library</h3>
+<p>Botnets are fundamentally high-performance network applications. Go was engineered specifically for modern networking and scalable web infrastructure.</p>
+<ul>
+<li><strong>Robust Networking Packages:</strong> The built-in <code>net</code>, <code>net/http</code>, and <code>crypto/tls</code> packages provide enterprise-grade capabilities for manipulating TCP/UDP sockets and establishing secure tunnels.</li>
+<li><strong>Ecosystem Integration:</strong> The language's module system allows threat actors to seamlessly pull in, specialized networking repositories. As demonstrated by Apex2, implementing state-of-the-art Cloudflare WAF evasion was achieved effortlessly by importing the <code>refraction-networking/utls</code> and <code>andybalholm/brotli</code> packages to forge, cryptographically perfect TLS Client Hello fingerprints.</li>
+</ul>
+<h3>7.5 Inherent Analysis Friction</h3>
+<p>While Go was not intentionally designed to obfuscate code, its compilation mechanics naturally generate significant friction for reverse engineers and automated analysis systems.</p>
+<ul>
+<li><strong>Volume and Structure:</strong> A standard Go binary contains thousands of runtime and garbage collection functions natively. Locating the malicious main logic requires sifting through an ocean of benign library code.</li>
+<li><strong>Non-Standard Calling Conventions:</strong> Stripped Go binaries lack standard stack frames, utilize complex interface types, and manage strings as contiguous memory blobs (pointer + length) rather than null-terminated arrays.</li>
+<li><strong>Attack Application:</strong> This architectural complexity breaks many traditional static analysis heuristics. Automated YARA scanners, string extractors, and commercial sandboxes frequently fail to parse Go malware correctly—which directly enabled Apex2 to operate under the radar while misclassified as a generic stealer.</li>
+</ul>
+<p><a href="https://msdbg.github.io">msdbg.github.io</a></p>
+</div>
+<hr>
+<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/apex2-reversing-a%20custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass</code><br>
+Canonical (indexable): <code>https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/</code></p>
+<p><a href="/">&larr; back to terminal</a></p>
+</article>
+</main>
+<footer class="footer">
+<div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
+<div class="footer-right"><span>blog.offensive32.com</span></div>
+</footer>
+</body>
+</html>
