@@ -23,7 +23,6 @@ def slugify(legacy_id: str) -> str:
 
 
 def fix_date(d: str) -> str:
-    
     m = re.match(r"^\s*(\d{4})-(\d{1,2})-(\d{1,2})\s*$", str(d))
     if m:
         y, mo, da = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
@@ -76,11 +75,12 @@ POST_TEMPLATE = """<!DOCTYPE html>
    theme the nav links, reuse the modal window chrome. */
 * {{ cursor: auto !important; }}
 .cursor-triangle, .cursor-trail, .cursor-burst {{ display: none !important; }}
+body {{ overflow: hidden; }}
 .header {{ overflow: hidden; padding-left: .5rem; padding-right: .5rem; }}
 .glitch {{ font-size: clamp(1.05rem, 4.5vw, 2.5rem); letter-spacing: .08em; overflow-wrap: anywhere; }}
-.static-nav {{ margin: 1rem 0; }}
-.static-nav a, .static-back a {{ color: var(--neon-cyan); }}
-.static-window {{ max-height: none; overflow: visible; }}
+a.modal-close {{ text-decoration: none; display: inline-block; }}
+a.post-card {{ color: inherit; text-decoration: none; display: block; }}
+.static-back a {{ color: var(--neon-cyan); }}
 .post-article .post-body {{ overflow-x: auto; }}
 .post-article img {{ max-width: 100%; height: auto; }}
 </style>
@@ -96,22 +96,37 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <div class="subtitle">// unauthorized access logged</div>
 </header>
 <main class="terminal">
-<nav class="static-nav"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/{legacy_id_url}">open in terminal view</a></nav>
-<div class="modal-content static-window">
-<article class="post-article">
-<h1>{title_esc}</h1>
-<p class="post-meta">// DECRYPTED: {date_iso} | AUTHOR: {author_esc}</p>
-<div class="post-tags">{tags_html}</div>
-<div class="post-body">{body_html}</div>
-<hr>
-<p class="static-back"><a href="/">&larr; back to terminal</a></p>
-</article>
-</div>
+<div class="terminal-header"><span class="prompt">root@offensive32:~#</span> <span class="cmd">cat /var/log/posts.log</span></div>
+<section class="posts-container"><div class="posts-list">{cards_html}</div></section>
 </main>
 <footer class="footer">
 <div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
 <div class="footer-right"><span>blog.offensive32.com</span></div>
 </footer>
+<div class="modal active" role="dialog" aria-modal="true" aria-label="{title_esc}">
+<div class="modal-content">
+<a class="modal-close" href="/" aria-label="Back to terminal">[ X ]</a>
+<article class="post-article">
+<h1>{title_esc}</h1>
+<p class="post-meta">// DECRYPTED: {date_iso} | AUTHOR: {author_esc}</p>
+<div class="post-body">{body_html}</div>
+<hr>
+<p class="static-back"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/{legacy_id_url}">open in terminal view</a></p>
+</article>
+</div>
+</div>
+<script>
+/* Standalone image zoom (same look/behavior as terminal view, no deps). */
+(function(){{var o=null,img=null,orig=null;
+function close(){{if(!o)return;o.classList.remove('active');if(orig)orig.classList.remove('zooming');document.body.style.overflow='hidden';orig=null;}}
+document.addEventListener('click',function(e){{
+if(o&&o.classList.contains('active')){{if(e.target===o)close();return;}}
+var t=e.target.closest?e.target.closest('.post-body img'):null;
+if(t){{if(!o){{o=document.createElement('div');o.className='image-zoom-overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');img=document.createElement('img');img.setAttribute('alt','Zoomed image');o.appendChild(img);document.body.appendChild(o);}}orig=t;img.src=t.currentSrc||t.src;img.alt=t.alt||'Zoomed image';t.classList.add('zooming');o.classList.add('active');document.body.style.overflow='hidden';}}
+}});
+document.addEventListener('keydown',function(e){{if(e.key==='Escape')close();}});
+}})();
+</script>
 </body>
 </html>
 """
@@ -122,24 +137,33 @@ def main() -> None:
     posts = data["posts"]
     OUT_P.mkdir(exist_ok=True)
 
-    mapping: dict[str, str] = {}
+    mapping: dict[str, str] = {p["id"]: slugify(p["id"]) for p in posts}
     sitemap_urls: list[tuple[str, str]] = [(f"{SITE}/", date.today().isoformat())]
+
+    # Static shell behind the overlay: compact cards linking every mirror
+    # (crawler mesh; dimmed behind .modal overlay for humans).
+    cards_html = "".join(
+        (
+            f'<a class="post-card" href="/p/{mapping[q["id"]]}/">'
+            f'<div class="post-header"><h3 class="post-title">{html.escape(q.get("title", ""))}</h3>'
+            f'<span class="post-date">{html.escape(fix_date(q.get("date", "")))}</span></div>'
+            f'<p class="post-excerpt">{html.escape(q.get("excerpt") or "")}</p></a>'
+        )
+        for q in posts
+    )
 
     for p in posts:
         legacy_id: str = p["id"]
-        slug = slugify(legacy_id)
-        mapping[legacy_id] = slug
+        slug = mapping[legacy_id]
         date_iso = fix_date(p.get("date", ""))
         title = p.get("title", slug)
         excerpt = p.get("excerpt") or "Offensive32 Security Research Blog"
         author = p.get("author") or "msdbg"
-        tags = p.get("tags") or []
         md_path = POSTS_DIR / p["file"]
         md_text = md_path.read_text(encoding="utf-8") if md_path.exists() else f"# {title}\n\n{excerpt}\n"
         body_html = md_to_html(md_text, p.get("assetsDir"))
         canonical = f"{SITE}/p/{slug}/"
         legacy_id_url = quote(legacy_id, safe="")
-        tags_html = "".join(f'<span class="tag">{html.escape(t)}</span>' for t in tags)
         jsonld = json.dumps(
             {
                 "@context": "https://schema.org",
@@ -164,9 +188,9 @@ def main() -> None:
                 legacy_id_esc=html.escape(legacy_id),
                 legacy_id_url=legacy_id_url,
                 date_iso=html.escape(date_iso),
-                tags_html=tags_html,
                 body_html=body_html,
                 jsonld=jsonld,
+                cards_html=cards_html,
             ),
             encoding="utf-8",
         )
