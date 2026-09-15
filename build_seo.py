@@ -32,7 +32,7 @@ def fix_date(d: str) -> str:
 
 
 def md_to_html(md_text: str, assets_dir: str | None) -> str:
-    md = MarkdownIt("commonmark")
+    md = MarkdownIt("commonmark").enable("table")
     raw = md.render(md_text)
     if not assets_dir:
         return raw
@@ -70,6 +70,20 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="/style.css">
+<style>
+/* Static-mirror overrides (no JS on these pages): restore native cursor
+   hidden by style.css for its triangle cursor, keep header on-screen,
+   theme the nav links, reuse the modal window chrome. */
+* {{ cursor: auto !important; }}
+.cursor-triangle, .cursor-trail, .cursor-burst {{ display: none !important; }}
+.header {{ overflow: hidden; padding-left: .5rem; padding-right: .5rem; }}
+.glitch {{ font-size: clamp(1.05rem, 4.5vw, 2.5rem); letter-spacing: .08em; overflow-wrap: anywhere; }}
+.static-nav {{ margin: 1rem 0; }}
+.static-nav a, .static-back a {{ color: var(--neon-cyan); }}
+.static-window {{ max-height: none; overflow: visible; }}
+.post-article .post-body {{ overflow-x: auto; }}
+.post-article img {{ max-width: 100%; height: auto; }}
+</style>
 <script type="application/ld+json">
 {jsonld}
 </script>
@@ -82,17 +96,17 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <div class="subtitle">// unauthorized access logged</div>
 </header>
 <main class="terminal">
-<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/{legacy_id_url}">open in terminal view</a></p>
+<nav class="static-nav"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/{legacy_id_url}">open in terminal view</a></nav>
+<div class="modal-content static-window">
 <article class="post-article">
 <h1>{title_esc}</h1>
-<p class="post-meta">// DECRYPTED: {date_iso} | AUTHOR: {author_esc} | LEGACY: #post/{legacy_id_esc}</p>
+<p class="post-meta">// DECRYPTED: {date_iso} | AUTHOR: {author_esc}</p>
 <div class="post-tags">{tags_html}</div>
 <div class="post-body">{body_html}</div>
 <hr>
-<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/{legacy_id_url}</code><br>
-Canonical (indexable): <code>{canonical}</code></p>
-<p><a href="/">&larr; back to terminal</a></p>
+<p class="static-back"><a href="/">&larr; back to terminal</a></p>
 </article>
+</div>
 </main>
 <footer class="footer">
 <div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
@@ -183,7 +197,7 @@ def main() -> None:
     (ROOT / "llms.txt").write_text("\n".join(llms_lines), encoding="utf-8")
 
     (ROOT / "404.html").write_text(
-        """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 // NOT_FOUND | Offensive32 Labs Blog</title><meta name="robots" content="noindex"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E"><link rel="stylesheet" href="/style.css"></head><body><main class="terminal"><h1>[ 404 // NOT_FOUND ]</h1><p>// requested sector does not exist</p><p><a href="/">&larr; back to terminal</a></p></main></body></html>\n""",
+        """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 // NOT_FOUND | Offensive32 Labs Blog</title><meta name="robots" content="noindex"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E"><link rel="stylesheet" href="/style.css"><style>*{{cursor:auto !important}}</style></head><body><main class="terminal"><h1>[ 404 // NOT_FOUND ]</h1><p>// requested sector does not exist</p><p><a href="/">&larr; back to terminal</a></p></main></body></html>\n""",
         encoding="utf-8",
     )
 
