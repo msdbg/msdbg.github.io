@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://blog.offensive32.com/</loc>
+    <lastmod>2026-09-15</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/</loc>
+    <lastmod>2026-03-09</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/</loc>
+    <lastmod>2026-02-13</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.offensive32.com/p/whoami/</loc>
+    <lastmod>2026-03-16</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.offensive32.com/p/the-mitre-attck-tools-mindmap/</loc>
+    <lastmod>2026-07-25</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/</loc>
+    <lastmod>2026-08-24</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.offensive32.com/p/do-you-still-need-to-learn-programming-when-ai-writes-better-code/</loc>
+    <lastmod>2026-09-08</lastmod>
+  </url>
+</urlset>

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://blog.offensive32.com/sitemap.xml

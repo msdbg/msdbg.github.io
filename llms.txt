@@ -1,0 +1,14 @@
+# Offensive32 Labs Blog
+> Base: https://blog.offensive32.com/
+
+Static crawlable mirrors (legacy #post/ URLs still work for humans):
+
+- [APEX2_Reversing_Custom_Golang_Botnet](https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/): Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.
+- [Evading_EDR_Stack_Unwinders](https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/): Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.
+- [whoami](https://blog.offensive32.com/p/whoami/): intro to whoami
+- [Mapping the Tools- the MITRE ATT&CK Tools Mindmap](https://blog.offensive32.com/p/the-mitre-attck-tools-mindmap/): A comprehensive mindmap of tools mapped to the MITRE ATT&CK framework, aiding in threat analysis and defense strategies.
+- [Is Future of Security Tools Headless ?: Meet AgentBurp](https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/): A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.
+- [Do You Still Need to Learn Programming When AI Writes Better Code ?](https://blog.offensive32.com/p/do-you-still-need-to-learn-programming-when-ai-writes-better-code/): A Thought about current state of programming language learning
+
+- Sitemap: https://blog.offensive32.com/sitemap.xml
+- Contact: contact@offensive32.com
