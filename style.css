@@ -861,6 +861,7 @@ outline-offset: 2px;
   .post-article h1 {
     font-size: 1rem;
     word-break: break-word;
+    padding-right: 3rem;
   }
 
   .post-article h2 {
