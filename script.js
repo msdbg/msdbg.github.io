@@ -5,6 +5,15 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function slugifyLegacyId(legacyId) {
+  return String(legacyId || '')
+    .replace(/&/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'post';
+}
+
 class Offensive32Blog {
   constructor() {
     this.posts = [];
@@ -102,7 +111,7 @@ class Offensive32Blog {
 
   async loadPosts() {
         try {
-            const response = await fetch('posts.json');
+            const response = await fetch('/posts.json');
             if (!response.ok) throw new Error('CONNECTION_REFUSED');
             
 		const data = await response.json();
@@ -179,9 +188,9 @@ class Offensive32Blog {
           
           
           if (assetsDir) {
-            img.setAttribute('src', `assets/posts/${assetsDir}/${src}`);
+            img.setAttribute('src', `/assets/posts/${assetsDir}/${src}`);
           } else {
-            img.setAttribute('src', `assets/posts/${src}`);
+            img.setAttribute('src', `/assets/posts/${src}`);
           }
         }
       });
@@ -189,12 +198,21 @@ class Offensive32Blog {
       return container.innerHTML;
     }
   
-    async openPost(postId) {
-const post = this.posts.find(p => p.id === postId);
+    getSlugForPost(post) {
+      return slugifyLegacyId(post.id);
+    }
+
+    findPostBySlug(slug) {
+      const s = String(slug || '').toLowerCase();
+      return this.posts.find(p => slugifyLegacyId(p.id) === s);
+    }
+
+    async openPost(postId, opts = {}) {
+const post = this.posts.find(p => p.id === postId) || this.findPostBySlug(postId);
 if (!post) return;
 
 try {
-const response = await fetch(`posts/${post.file}`);
+const response = await fetch(`/posts/${post.file}`);
 if (!response.ok) throw new Error('DECRYPTION_FAILED');
 
 const markdown = await response.text();
@@ -236,8 +254,12 @@ throw new Error('MARKED_LIBRARY_NOT_LOADED');
     this.modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    
-    window.history.pushState(null, '', `#post/${encodeURIComponent(postId)}`);
+    if (opts.updateUrl !== false) {
+      const target = `/p/${this.getSlugForPost(post)}/`;
+      if (window.location.pathname !== target) {
+        window.history.pushState({ post: post.id }, '', target);
+      }
+    }
 } catch (error) {
 console.error('Error:', error);
 let errorMessage = 'Unable to decrypt the requested data. The file may be corrupted or missing.';
@@ -253,10 +275,18 @@ this.modal.classList.add('active');
 }
 }
 
-    closeModal() {
+    closeModal(push = true) {
+        const wasOpen = this.modal.classList.contains('active');
         this.modal.classList.remove('active');
         document.body.style.overflow = '';
-        window.history.pushState(null, '', window.location.pathname);
+        if (push && wasOpen && (window.location.pathname !== '/' || window.location.hash || window.location.search)) {
+          window.history.pushState(null, '', '/');
+        }
+    }
+
+    closeModalSilent() {
+        this.modal.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     setupEventListeners() {
@@ -283,7 +313,18 @@ this.closeModal();
 });
 }
 
-this.postContent.addEventListener('click', (e) => {
+    this.postContent.addEventListener('click', (e) => {
+const anchor = e.target.closest('a[href]');
+if (anchor) {
+  const href = anchor.getAttribute('href');
+  if (href && href.startsWith('/p/')) {
+    const m = href.match(/^\/p\/([^\/\?#]+)\/?/);
+    if (m) {
+      const found = this.findPostBySlug(decodeURIComponent(m[1]));
+      if (found) { e.preventDefault(); this.openPost(found.id); return; }
+    }
+  }
+}
 const link = e.target.closest('a[href^="#"]');
 if (link) {
 e.preventDefault();
@@ -302,19 +343,71 @@ this.closeModal();
 }
 });
 
+document.addEventListener('click', (e) => {
+const a = e.target.closest('a.post-link, a[href^="/p/"]');
+if (!a) return;
+const href = a.getAttribute('href') || '';
+let post = null;
+if (href.startsWith('/p/')) {
+  const m = href.match(/^\/p\/([^\/\?#]+)\/?/);
+  if (m) post = this.findPostBySlug(decodeURIComponent(m[1]));
+} else if (href.startsWith('#post/')) {
+  try { post = this.posts.find(p => p.id === decodeURIComponent(href.replace('#post/', ''))) || null; } catch (err) {}
+}
+if (post) { e.preventDefault(); this.openPost(post.id); }
+});
+
 
 window.addEventListener('popstate', () => {
-this.handleHashChange();
+this.handleRouteChange();
 });
 }
 
-    handleHashChange() {
+
+    handleRouteChange() {
+      
+      const pm = window.location.pathname.match(/^\/p\/([^\/]+)\/?$/);
+      if (pm) {
+        const post = this.findPostBySlug(decodeURIComponent(pm[1]));
+        if (post) { this.openPost(post.id, { updateUrl: false }); return; }
+      }
+
       const hash = window.location.hash;
       if (hash.startsWith('#post/')) {
         
         const postId = decodeURIComponent(hash.replace('#post/', ''));
-        this.openPost(postId);
+        const post = this.posts.find(p => p.id === postId) || this.findPostBySlug(postId);
+        if (post) {
+          this.openPost(post.id, { updateUrl: false }).then(() => {
+            try { window.history.replaceState({ post: post.id }, '', `/p/${this.getSlugForPost(post)}/`); } catch (e) {}
+          });
+          return;
+        }
+        this.openPost(postId, { updateUrl: false });
+        return;
       }
+    
+      try {
+        const q = new URLSearchParams(window.location.search).get('post');
+        if (q) {
+          const qid = decodeURIComponent(q);
+          const post = this.posts.find(p => p.id === qid) || this.findPostBySlug(qid);
+          if (post) {
+            this.openPost(post.id, { updateUrl: false }).then(() => {
+              try { window.history.replaceState({ post: post.id }, '', `/p/${this.getSlugForPost(post)}/`); } catch (e) {}
+            });
+            return;
+          }
+          this.openPost(qid, { updateUrl: false });
+          return;
+        }
+      } catch (e) {}
+      if (this.modal.classList.contains('active')) this.closeModalSilent();
+    }
+
+    
+    handleHashChange() {
+      return this.handleRouteChange();
     }
 }
 
@@ -648,7 +741,7 @@ async init() {
 async loadPosts() {
 if (this.postsLoaded) return;
 try {
-const response = await fetch('posts.json');
+const response = await fetch('/posts.json');
 if (!response.ok) throw new Error('Failed to load posts');
 const data = await response.json();
 this.posts = data.posts.sort((a, b) => {
@@ -796,7 +889,7 @@ this.ipAddress = 'UNKNOWN';
 
   async displayPostContent(post) {
     try {
-      const response = await fetch(`posts/${post.file}`);
+      const response = await fetch(`/posts/${post.file}`);
       if (!response.ok) throw new Error('File not found');
       const content = await response.text();
 
@@ -839,8 +932,8 @@ this.ipAddress = 'UNKNOWN';
         this.posts.forEach(post => {
           const escapedId = escapeHtml(post.id);
           const escapedFile = escapeHtml(post.file);
-          const encodedId = encodeURIComponent(post.id);
-          this.printLine(`<a href="#post/${encodedId}" data-post-id="${escapedId}" class="post-link">${escapedFile}</a>`, '');
+          const slug = slugifyLegacyId(post.id);
+          this.printLine(`<a href="/p/${slug}/" data-post-id="${escapedId}" class="post-link">${escapedFile}</a>`, '');
         });
       }
   
@@ -856,7 +949,7 @@ this.ipAddress = 'UNKNOWN';
 
     async handleWhoami() {
         try {
-            const response = await fetch('posts/WHOAMI.md');
+            const response = await fetch('/posts/whoami.md');
             if (!response.ok) throw new Error('File not found');
             const content = await response.text();
             
