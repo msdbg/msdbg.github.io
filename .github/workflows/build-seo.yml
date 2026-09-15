@@ -2,7 +2,7 @@ name: build-seo
 on:
   push:
     branches: [main]
-    paths: ['posts/**', 'posts.json', 'build_seo.py']
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
