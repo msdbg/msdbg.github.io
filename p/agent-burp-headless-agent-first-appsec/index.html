@@ -20,6 +20,20 @@
 <meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="/style.css">
+<style>
+/* Static-mirror overrides (no JS on these pages): restore native cursor
+   hidden by style.css for its triangle cursor, keep header on-screen,
+   theme the nav links, reuse the modal window chrome. */
+* { cursor: auto !important; }
+.cursor-triangle, .cursor-trail, .cursor-burst { display: none !important; }
+.header { overflow: hidden; padding-left: .5rem; padding-right: .5rem; }
+.glitch { font-size: clamp(1.05rem, 4.5vw, 2.5rem); letter-spacing: .08em; overflow-wrap: anywhere; }
+.static-nav { margin: 1rem 0; }
+.static-nav a, .static-back a { color: var(--neon-cyan); }
+.static-window { max-height: none; overflow: visible; }
+.post-article .post-body { overflow-x: auto; }
+.post-article img { max-width: 100%; height: auto; }
+</style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Is Future of Security Tools Headless ?: Meet AgentBurp", "description": "A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.", "datePublished": "2026-08-24", "author": {"@type": "Person", "name": "msdbg"}, "mainEntityOfPage": "https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/", "url": "https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/"}
 </script>
@@ -32,10 +46,11 @@
 <div class="subtitle">// unauthorized access logged</div>
 </header>
 <main class="terminal">
-<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/Agent-Burp-Headless-Agent-First-AppSec">open in terminal view</a></p>
+<nav class="static-nav"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/Agent-Burp-Headless-Agent-First-AppSec">open in terminal view</a></nav>
+<div class="modal-content static-window">
 <article class="post-article">
 <h1>Is Future of Security Tools Headless ?: Meet AgentBurp</h1>
-<p class="post-meta">// DECRYPTED: 2026-08-24 | AUTHOR: msdbg | LEGACY: #post/Agent-Burp-Headless-Agent-First-AppSec</p>
+<p class="post-meta">// DECRYPTED: 2026-08-24 | AUTHOR: msdbg</p>
 <div class="post-tags"><span class="tag">Burp</span><span class="tag">Bug Hunting</span><span class="tag">AppSec</span><span class="tag">AI Agents</span></div>
 <div class="post-body"><p>a Human security researcher sits in front of a GUI tool like Burp Suite and proxies their browser traffic, sends interesting requests to a Repeater, and clicks through various tabs to configure Intruder payloads or Active Scans, then we got Autonomous AI agents they use MCP to communicate with tools, take screenshots and move mouse and click buttons on their own.</p>
 <p>But GUI was made for humans. <strong>AI agents are not made to move mouse and click GUI buttons.</strong></p>
@@ -69,10 +84,9 @@ I wanted AgentBurp to not be a dumb scanner. It includes custom stateful engines
 <p>-msdbg</p>
 </div>
 <hr>
-<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/Agent-Burp-Headless-Agent-First-AppSec</code><br>
-Canonical (indexable): <code>https://blog.offensive32.com/p/agent-burp-headless-agent-first-appsec/</code></p>
-<p><a href="/">&larr; back to terminal</a></p>
+<p class="static-back"><a href="/">&larr; back to terminal</a></p>
 </article>
+</div>
 </main>
 <footer class="footer">
 <div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>

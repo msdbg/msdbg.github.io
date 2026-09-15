@@ -20,6 +20,20 @@
 <meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="/style.css">
+<style>
+/* Static-mirror overrides (no JS on these pages): restore native cursor
+   hidden by style.css for its triangle cursor, keep header on-screen,
+   theme the nav links, reuse the modal window chrome. */
+* { cursor: auto !important; }
+.cursor-triangle, .cursor-trail, .cursor-burst { display: none !important; }
+.header { overflow: hidden; padding-left: .5rem; padding-right: .5rem; }
+.glitch { font-size: clamp(1.05rem, 4.5vw, 2.5rem); letter-spacing: .08em; overflow-wrap: anywhere; }
+.static-nav { margin: 1rem 0; }
+.static-nav a, .static-back a { color: var(--neon-cyan); }
+.static-window { max-height: none; overflow: visible; }
+.post-article .post-body { overflow-x: auto; }
+.post-article img { max-width: 100%; height: auto; }
+</style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Evading_EDR_Stack_Unwinders", "description": "Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.", "datePublished": "2026-02-13", "author": {"@type": "Person", "name": "msdbg"}, "mainEntityOfPage": "https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/", "url": "https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/"}
 </script>
@@ -32,10 +46,11 @@
 <div class="subtitle">// unauthorized access logged</div>
 </header>
 <main class="terminal">
-<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring">open in terminal view</a></p>
+<nav class="static-nav"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring">open in terminal view</a></nav>
+<div class="modal-content static-window">
 <article class="post-article">
 <h1>Evading_EDR_Stack_Unwinders</h1>
-<p class="post-meta">// DECRYPTED: 2026-02-13 | AUTHOR: msdbg | LEGACY: #post/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring</p>
+<p class="post-meta">// DECRYPTED: 2026-02-13 | AUTHOR: msdbg</p>
 <div class="post-tags"><span class="tag">edr</span><span class="tag">evasion</span><span class="tag">security</span><span class="tag">windows</span></div>
 <div class="post-body"><hr />
 <h1>Evading EDR Stack Unwinders with Thread Stack Mirroring</h1>
@@ -173,10 +188,9 @@ memcpy(mirrorDest, (void*)ctx.Rsp, bytesToMirror);
 <p>The full Proof of Concept is available on <a href="https://github.com/msdbg/synthetixv1">my GitHub</a>.</p>
 </div>
 <hr>
-<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring</code><br>
-Canonical (indexable): <code>https://blog.offensive32.com/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/</code></p>
-<p><a href="/">&larr; back to terminal</a></p>
+<p class="static-back"><a href="/">&larr; back to terminal</a></p>
 </article>
+</div>
 </main>
 <footer class="footer">
 <div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>

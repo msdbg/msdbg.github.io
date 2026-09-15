@@ -20,6 +20,20 @@
 <meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="/style.css">
+<style>
+/* Static-mirror overrides (no JS on these pages): restore native cursor
+   hidden by style.css for its triangle cursor, keep header on-screen,
+   theme the nav links, reuse the modal window chrome. */
+* { cursor: auto !important; }
+.cursor-triangle, .cursor-trail, .cursor-burst { display: none !important; }
+.header { overflow: hidden; padding-left: .5rem; padding-right: .5rem; }
+.glitch { font-size: clamp(1.05rem, 4.5vw, 2.5rem); letter-spacing: .08em; overflow-wrap: anywhere; }
+.static-nav { margin: 1rem 0; }
+.static-nav a, .static-back a { color: var(--neon-cyan); }
+.static-window { max-height: none; overflow: visible; }
+.post-article .post-body { overflow-x: auto; }
+.post-article img { max-width: 100%; height: auto; }
+</style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BlogPosting", "headline": "APEX2_Reversing_Custom_Golang_Botnet", "description": "Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.", "datePublished": "2026-03-09", "author": {"@type": "Person", "name": "msdbg"}, "mainEntityOfPage": "https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/", "url": "https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/"}
 </script>
@@ -32,35 +46,121 @@
 <div class="subtitle">// unauthorized access logged</div>
 </header>
 <main class="terminal">
-<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/apex2-reversing-a%20custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass">open in terminal view</a></p>
+<nav class="static-nav"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/apex2-reversing-a%20custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass">open in terminal view</a></nav>
+<div class="modal-content static-window">
 <article class="post-article">
 <h1>APEX2_Reversing_Custom_Golang_Botnet</h1>
-<p class="post-meta">// DECRYPTED: 2026-03-09 | AUTHOR: msdbg | LEGACY: #post/apex2-reversing-a custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass</p>
+<p class="post-meta">// DECRYPTED: 2026-03-09 | AUTHOR: msdbg</p>
 <div class="post-tags"><span class="tag">malware</span><span class="tag">reversing</span><span class="tag">golang</span><span class="tag">botnet</span></div>
 <div class="post-body"><hr />
 <h1>APEX2: Reversing a Custom Golang Botnet with TLS-Spoofing and Cloudflare WAF Bypass</h1>
 <h2>Quick Reference</h2>
-<p>| Category | Field | Value |
-|----------|-------|-------|
-| <strong>REPORT</strong> | Title | APEX2: Reversing a Custom Golang Botnet with TLS-Spoofing and Cloudflare WAF Bypass |
-| | Date | 2026-03-09 |
-| | Author | msdbg |
-| | Org | Independent Research |
-| | TLP | TLP:CLEAR (Public Release) |
-| | | |
-| <strong>SAMPLE</strong> | SHA-256 | 21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7 |
-| | File Type | PE32 executable (Console) Intel 80386 |
-| | Size | 10,378,240 bytes (9.90 MB) |
-| | Compiler | Go (go1.24.0) - windows/386 |
-| | Subsystem | Windows CUI (Console) |
-| | Anti-Analysis | Aggressive process/window enumeration (x64dbg, Procmon), Syscall hook detection (NtQuerySystemInformation), Debugger check evasion, Time distortion checks |
-| | | |
-| <strong>THREAT CONTEXT</strong> | Actor GPS | Romania (Botmaster tracking as &quot;Apex&quot;) |
-| | Type | L4/L7 DDoS Botnet (Discord/Game/TLS/PPS Floods) |
-| | Platform | Cross-compiled (Windows analyzed, Linux/IoT suspected) |
-| | Frameworks | github.com/refraction-networking/utls (TLS Spoofing) |
-| | C2 Server | 45.128.118.140 (Hardcoded via Go -ldflags) |
-| | | |</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REPORT</strong></td>
+<td>Title</td>
+<td>APEX2: Reversing a Custom Golang Botnet with TLS-Spoofing and Cloudflare WAF Bypass</td>
+</tr>
+<tr>
+<td></td>
+<td>Date</td>
+<td>2026-03-09</td>
+</tr>
+<tr>
+<td></td>
+<td>Author</td>
+<td>msdbg</td>
+</tr>
+<tr>
+<td></td>
+<td>Org</td>
+<td>Independent Research</td>
+</tr>
+<tr>
+<td></td>
+<td>TLP</td>
+<td>TLP:CLEAR (Public Release)</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>SAMPLE</strong></td>
+<td>SHA-256</td>
+<td>21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7</td>
+</tr>
+<tr>
+<td></td>
+<td>File Type</td>
+<td>PE32 executable (Console) Intel 80386</td>
+</tr>
+<tr>
+<td></td>
+<td>Size</td>
+<td>10,378,240 bytes (9.90 MB)</td>
+</tr>
+<tr>
+<td></td>
+<td>Compiler</td>
+<td>Go (go1.24.0) - windows/386</td>
+</tr>
+<tr>
+<td></td>
+<td>Subsystem</td>
+<td>Windows CUI (Console)</td>
+</tr>
+<tr>
+<td></td>
+<td>Anti-Analysis</td>
+<td>Aggressive process/window enumeration (x64dbg, Procmon), Syscall hook detection (NtQuerySystemInformation), Debugger check evasion, Time distortion checks</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>THREAT CONTEXT</strong></td>
+<td>Actor GPS</td>
+<td>Romania (Botmaster tracking as &quot;Apex&quot;)</td>
+</tr>
+<tr>
+<td></td>
+<td>Type</td>
+<td>L4/L7 DDoS Botnet (Discord/Game/TLS/PPS Floods)</td>
+</tr>
+<tr>
+<td></td>
+<td>Platform</td>
+<td>Cross-compiled (Windows analyzed, Linux/IoT suspected)</td>
+</tr>
+<tr>
+<td></td>
+<td>Frameworks</td>
+<td>github.com/refraction-networking/utls (TLS Spoofing)</td>
+</tr>
+<tr>
+<td></td>
+<td>C2 Server</td>
+<td>45.128.118.140 (Hardcoded via Go -ldflags)</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h2>Table of Contents</h2>
 <ol>
 <li>
@@ -132,18 +232,56 @@
 <p><strong>Note:</strong> The primary sample analyzed in this report was initially tagged by crowd-sourced threat intelligence platforms as LummaStealer. Automated commercial sandboxes failed to properly classify the payload due to its aggressive debugger-evasion routines causing the malware to abort its primary execution threads.</p>
 </blockquote>
 <p><strong>Primary Sample (Apex2 Botnet Payload)</strong></p>
-<p>| Attribute | Value |
-|---|---|
-| File Name | 21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7.exe |
-| SHA-256 | 21B19D07A414AD1FF7443C21C6530D1164C6C1EAE56D3619A422D3F311B580B7 |
-| SHA-1 | 2AA67CB6142373C7AEC4D7278051D27C6CF3005F |
-| MD5 | CC4B92FAE19C44F7115E7C8BDA7CAC70 |
-| File Size | 10,378,240 bytes (9.90 MB) |
-| File Type | PE32 executable (Intel 80386) |
-| Compiler/Linker | Go (go1.24.0) / Microsoft Linker 3.0 |
-| Subsystem | Windows CUI (Console) |
-| Internal Name | apex2/Bot (Recovered from Go build artifacts) |
-| C2 Infrastructure | 45.128.118.140 (Compiled via -ldflags) |</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File Name</td>
+<td>21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7.exe</td>
+</tr>
+<tr>
+<td>SHA-256</td>
+<td>21B19D07A414AD1FF7443C21C6530D1164C6C1EAE56D3619A422D3F311B580B7</td>
+</tr>
+<tr>
+<td>SHA-1</td>
+<td>2AA67CB6142373C7AEC4D7278051D27C6CF3005F</td>
+</tr>
+<tr>
+<td>MD5</td>
+<td>CC4B92FAE19C44F7115E7C8BDA7CAC70</td>
+</tr>
+<tr>
+<td>File Size</td>
+<td>10,378,240 bytes (9.90 MB)</td>
+</tr>
+<tr>
+<td>File Type</td>
+<td>PE32 executable (Intel 80386)</td>
+</tr>
+<tr>
+<td>Compiler/Linker</td>
+<td>Go (go1.24.0) / Microsoft Linker 3.0</td>
+</tr>
+<tr>
+<td>Subsystem</td>
+<td>Windows CUI (Console)</td>
+</tr>
+<tr>
+<td>Internal Name</td>
+<td>apex2/Bot (Recovered from Go build artifacts)</td>
+</tr>
+<tr>
+<td>C2 Infrastructure</td>
+<td>45.128.118.140 (Compiled via -ldflags)</td>
+</tr>
+</tbody>
+</table>
 <h3>2.3 Infection Chain / Kill Chain Overview</h3>
 <p>Unlike Information Stealers that prioritize immediate exfiltration and self-deletion, the Apex2 botnet is designed for high-availability persistence and sustained network attacks. Its operational life cycle can be broken down into four distinct phases:</p>
 <p><img src="/assets/posts/apex2-reversing-2026-03-09/kill-chain-apex%20%281%29.jpg" alt="alt text" /></p>
@@ -255,15 +393,49 @@ Commands are issued from the C2 to the infected swarm using a structured JSON pa
 <h2>Section 6 — IoCs &amp; Detection Engineering</h2>
 <p>The following Indicators of Compromise (IoCs) and YARA logic are provided to accurately detect and hunt for the Apex2 botnet family.</p>
 <h3>6.1 Network Indicators (C2 &amp; Infrastructure)</h3>
-<p>| Type | Indicator | Description |
-|---|---|---|
-| IPv4 | 45.128.118.140 | Hardcoded Apex2 Command &amp; Control Server. |
-| Protocol | REGISTER windows 386 | Initial plaintext heartbeat / registration string. |</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Indicator</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IPv4</td>
+<td>45.128.118.140</td>
+<td>Hardcoded Apex2 Command &amp; Control Server.</td>
+</tr>
+<tr>
+<td>Protocol</td>
+<td>REGISTER windows 386</td>
+<td>Initial plaintext heartbeat / registration string.</td>
+</tr>
+</tbody>
+</table>
 <h3>6.2 Host-Based Indicators (File Hashes)</h3>
-<p>| Type | Hash | Note |
-|---|---|---|
-| SHA-256 | 21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7 | Apex2 Go Payload (Analyzed) |
-| MD5 | CC4B92FAE19C44F7115E7C8BDA7CAC70 | Apex2 Go Payload (Analyzed) |</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Hash</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SHA-256</td>
+<td>21b19d07a414ad1ff7443c21c6530d1164c6c1eae56d3619a422d3f311b580b7</td>
+<td>Apex2 Go Payload (Analyzed)</td>
+</tr>
+<tr>
+<td>MD5</td>
+<td>CC4B92FAE19C44F7115E7C8BDA7CAC70</td>
+<td>Apex2 Go Payload (Analyzed)</td>
+</tr>
+</tbody>
+</table>
 <h3>6.3 Memory &amp; Artifact Indicators</h3>
 <ul>
 <li>Internal Go Build Path: <code>path apex2/Bot</code></li>
@@ -344,10 +516,9 @@ Commands are issued from the C2 to the infected swarm using a structured JSON pa
 <p><a href="https://msdbg.github.io">msdbg.github.io</a></p>
 </div>
 <hr>
-<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/apex2-reversing-a%20custom-golang-botnet-with-tls-spoofing-and--cloudflare-bypass</code><br>
-Canonical (indexable): <code>https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/</code></p>
-<p><a href="/">&larr; back to terminal</a></p>
+<p class="static-back"><a href="/">&larr; back to terminal</a></p>
 </article>
+</div>
 </main>
 <footer class="footer">
 <div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>

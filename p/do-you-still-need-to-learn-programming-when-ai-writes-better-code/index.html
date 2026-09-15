@@ -20,6 +20,20 @@
 <meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%2300fff9'%3E%3E_%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="/style.css">
+<style>
+/* Static-mirror overrides (no JS on these pages): restore native cursor
+   hidden by style.css for its triangle cursor, keep header on-screen,
+   theme the nav links, reuse the modal window chrome. */
+* { cursor: auto !important; }
+.cursor-triangle, .cursor-trail, .cursor-burst { display: none !important; }
+.header { overflow: hidden; padding-left: .5rem; padding-right: .5rem; }
+.glitch { font-size: clamp(1.05rem, 4.5vw, 2.5rem); letter-spacing: .08em; overflow-wrap: anywhere; }
+.static-nav { margin: 1rem 0; }
+.static-nav a, .static-back a { color: var(--neon-cyan); }
+.static-window { max-height: none; overflow: visible; }
+.post-article .post-body { overflow-x: auto; }
+.post-article img { max-width: 100%; height: auto; }
+</style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Do You Still Need to Learn Programming When AI Writes Better Code ?", "description": "A Thought about current state of programming language learning", "datePublished": "2026-09-08", "author": {"@type": "Person", "name": "msdbg"}, "mainEntityOfPage": "https://blog.offensive32.com/p/do-you-still-need-to-learn-programming-when-ai-writes-better-code/", "url": "https://blog.offensive32.com/p/do-you-still-need-to-learn-programming-when-ai-writes-better-code/"}
 </script>
@@ -32,10 +46,11 @@
 <div class="subtitle">// unauthorized access logged</div>
 </header>
 <main class="terminal">
-<p style="margin:1rem 0"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/Do-You-Still-Need-to-Learn-Programming-When-AI-Writes-Better-Code">open in terminal view</a></p>
+<nav class="static-nav"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/Do-You-Still-Need-to-Learn-Programming-When-AI-Writes-Better-Code">open in terminal view</a></nav>
+<div class="modal-content static-window">
 <article class="post-article">
 <h1>Do You Still Need to Learn Programming When AI Writes Better Code ?</h1>
-<p class="post-meta">// DECRYPTED: 2026-09-08 | AUTHOR: msdbg | LEGACY: #post/Do-You-Still-Need-to-Learn-Programming-When-AI-Writes-Better-Code</p>
+<p class="post-meta">// DECRYPTED: 2026-09-08 | AUTHOR: msdbg</p>
 <div class="post-tags"><span class="tag">Programming</span><span class="tag">Off Topic</span><span class="tag">Agentic Terminals</span><span class="tag">AI Agents</span></div>
 <div class="post-body"><p>I remember one of my favorite documentaries which was released back in 2017, named <a href="https://www.youtube.com/watch?v=WXuK6gekU1Y&amp;t=4s"><strong>AlphaGo</strong></a>, where the world's No. 1 Go player, Lee Sedol, lost the five-game match against AlphaGo, an AI program by DeepMind.</p>
 <p><img src="/assets/posts/current-state-of-programming-2026-09-08/alphago-doc.png" alt="alt text" /></p>
@@ -133,10 +148,9 @@ Below are the tools you must give a thought:</p>
 </ul>
 </div>
 <hr>
-<p>Share (legacy URL, never breaks): <code>https://blog.offensive32.com/#post/Do-You-Still-Need-to-Learn-Programming-When-AI-Writes-Better-Code</code><br>
-Canonical (indexable): <code>https://blog.offensive32.com/p/do-you-still-need-to-learn-programming-when-ai-writes-better-code/</code></p>
-<p><a href="/">&larr; back to terminal</a></p>
+<p class="static-back"><a href="/">&larr; back to terminal</a></p>
 </article>
+</div>
 </main>
 <footer class="footer">
 <div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
