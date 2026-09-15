@@ -26,11 +26,12 @@
    theme the nav links, reuse the modal window chrome. */
 * { cursor: auto !important; }
 .cursor-triangle, .cursor-trail, .cursor-burst { display: none !important; }
+body { overflow: hidden; }
 .header { overflow: hidden; padding-left: .5rem; padding-right: .5rem; }
 .glitch { font-size: clamp(1.05rem, 4.5vw, 2.5rem); letter-spacing: .08em; overflow-wrap: anywhere; }
-.static-nav { margin: 1rem 0; }
-.static-nav a, .static-back a { color: var(--neon-cyan); }
-.static-window { max-height: none; overflow: visible; }
+a.modal-close { text-decoration: none; display: inline-block; }
+a.post-card { color: inherit; text-decoration: none; display: block; }
+.static-back a { color: var(--neon-cyan); }
 .post-article .post-body { overflow-x: auto; }
 .post-article img { max-width: 100%; height: auto; }
 </style>
@@ -46,12 +47,19 @@
 <div class="subtitle">// unauthorized access logged</div>
 </header>
 <main class="terminal">
-<nav class="static-nav"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/whoami">open in terminal view</a></nav>
-<div class="modal-content static-window">
+<div class="terminal-header"><span class="prompt">root@offensive32:~#</span> <span class="cmd">cat /var/log/posts.log</span></div>
+<section class="posts-container"><div class="posts-list"><a class="post-card" href="/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/"><div class="post-header"><h3 class="post-title">APEX2_Reversing_Custom_Golang_Botnet</h3><span class="post-date">2026-03-09</span></div><p class="post-excerpt">Deep dive into reversing a custom Golang botnet with TLS-spoofing and Cloudflare WAF bypass techniques.</p></a><a class="post-card" href="/p/synthetix-v1-evading-edr-stack-unwinders-with-thread-stack-mirroring/"><div class="post-header"><h3 class="post-title">Evading_EDR_Stack_Unwinders</h3><span class="post-date">2026-02-13</span></div><p class="post-excerpt">Advanced EDR evasion techniques using thread stack mirroring to bypass stack unwinders.</p></a><a class="post-card" href="/p/whoami/"><div class="post-header"><h3 class="post-title">whoami</h3><span class="post-date">2026-03-16</span></div><p class="post-excerpt">intro to whoami</p></a><a class="post-card" href="/p/the-mitre-attck-tools-mindmap/"><div class="post-header"><h3 class="post-title">Mapping the Tools- the MITRE ATT&amp;CK Tools Mindmap</h3><span class="post-date">2026-07-25</span></div><p class="post-excerpt">A comprehensive mindmap of tools mapped to the MITRE ATT&amp;CK framework, aiding in threat analysis and defense strategies.</p></a><a class="post-card" href="/p/agent-burp-headless-agent-first-appsec/"><div class="post-header"><h3 class="post-title">Is Future of Security Tools Headless ?: Meet AgentBurp</h3><span class="post-date">2026-08-24</span></div><p class="post-excerpt">A Lightweight Compiled Go binary your AI agent uses to do AppSec without opening Burp.</p></a><a class="post-card" href="/p/do-you-still-need-to-learn-programming-when-ai-writes-better-code/"><div class="post-header"><h3 class="post-title">Do You Still Need to Learn Programming When AI Writes Better Code ?</h3><span class="post-date">2026-09-08</span></div><p class="post-excerpt">A Thought about current state of programming language learning</p></a></div></section>
+</main>
+<footer class="footer">
+<div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
+<div class="footer-right"><span>blog.offensive32.com</span></div>
+</footer>
+<div class="modal active" role="dialog" aria-modal="true" aria-label="whoami">
+<div class="modal-content">
+<a class="modal-close" href="/" aria-label="Back to terminal">[ X ]</a>
 <article class="post-article">
 <h1>whoami</h1>
 <p class="post-meta">// DECRYPTED: 2026-03-16 | AUTHOR: msdbg</p>
-<div class="post-tags"><span class="tag">intro</span><span class="tag">whoami</span></div>
 <div class="post-body"><h1>root@msdbg:~$ whoami</h1>
 <p>I am Mukhtar goes by the alias &quot;msdbg&quot; in cyberspace.</p>
 <p>I've been active in cybersecurity since 2017, specializing in Offensive Security, Malware reverse engineering, and Exploit development.</p>
@@ -70,13 +78,21 @@
  * X/Twitter: <a href="https://x.com/0xmsdbg">x.com/0xmsdbg</a></p>
 </div>
 <hr>
-<p class="static-back"><a href="/">&larr; back to terminal</a></p>
+<p class="static-back"><a href="/">&larr; back to terminal</a> &nbsp;|&nbsp; <a href="/#post/whoami">open in terminal view</a></p>
 </article>
 </div>
-</main>
-<footer class="footer">
-<div class="footer-left"><span class="blink">●</span> CONNECTION_NOT_SECURE</div>
-<div class="footer-right"><span>blog.offensive32.com</span></div>
-</footer>
+</div>
+<script>
+/* Standalone image zoom (same look/behavior as terminal view, no deps). */
+(function(){var o=null,img=null,orig=null;
+function close(){if(!o)return;o.classList.remove('active');if(orig)orig.classList.remove('zooming');document.body.style.overflow='hidden';orig=null;}
+document.addEventListener('click',function(e){
+if(o&&o.classList.contains('active')){if(e.target===o)close();return;}
+var t=e.target.closest?e.target.closest('.post-body img'):null;
+if(t){if(!o){o=document.createElement('div');o.className='image-zoom-overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');img=document.createElement('img');img.setAttribute('alt','Zoomed image');o.appendChild(img);document.body.appendChild(o);}orig=t;img.src=t.currentSrc||t.src;img.alt=t.alt||'Zoomed image';t.classList.add('zooming');o.classList.add('active');document.body.style.overflow='hidden';}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
 </body>
 </html>
