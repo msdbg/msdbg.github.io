@@ -172,6 +172,9 @@ body {
 
 
 .post-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-left: 3px solid var(--neon-cyan);
