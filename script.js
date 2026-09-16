@@ -157,16 +157,17 @@ class Offensive32Blog {
 	  const tags = post.tags
 	    ? post.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')
 	    : '';
+	  const slug = this.getSlugForPost(post);
 
 	  return `
-	    <article class="post-card" data-post-id="${escapedId}" data-post-file="${escapedFile}">
+	    <a class="post-card" href="/p/${slug}/" data-post-id="${escapedId}" data-post-file="${escapedFile}">
 	      <div class="post-header">
 	        <h3 class="post-title">${escapedTitle}</h3>
 	        <span class="post-date">${formattedDate}</span>
 	      </div>
 	      <p class="post-excerpt">${escapedExcerpt}</p>
 	      ${tags ? `<div class="post-tags">${tags}</div>` : ''}
-	    </article>
+	    </a>
 	  `;
 	}
 
@@ -291,13 +292,8 @@ this.modal.classList.add('active');
 
     setupEventListeners() {
 
-this.postsContainer.addEventListener('click', (e) => {
-const card = e.target.closest('.post-card');
-if (card) {
-const postId = card.dataset.postId;
-this.openPost(postId);
-}
-});
+this.terminalInput = document.getElementById('terminal-input');
+this.terminalOutput = document.getElementById('terminal-output');
 
 
 this.modal.addEventListener('click', (e) => {
