@@ -90,6 +90,22 @@
       ],
       "pinned": false,
       "assetsDir": "current-state-of-programming-2026-09-08"
+    },
+    {
+      "id": "php2shell Vulnerability Research PoC CVE-2026-109618",
+      "title": "php2shell UAF Vulnerability Research PoC CVE-2026-109618",
+      "file": "php2shell Vulnerability Research PoC  CVE-2026-109618.md",
+      "date": "2026-10-24",
+      "author": "msdbg",
+      "excerpt": "php2shell UAF Vulnerability Research PoC CVE-2026-109618",
+      "tags": [
+        "UAF",
+        "CVE",
+        "Vulnerability Research",
+        "Exploit Development"
+      ],
+      "pinned": false,
+      "assetsDir": "php2shell-CVE-2026-109618-2026-10-24"
     }
   ]
 }
