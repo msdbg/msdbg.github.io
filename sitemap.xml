@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://blog.offensive32.com/</loc>
-    <lastmod>2026-09-16</lastmod>
+    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://blog.offensive32.com/p/apex2-reversing-a-custom-golang-botnet-with-tls-spoofing-and-cloudflare-bypass/</loc>
@@ -27,5 +27,9 @@
   <url>
     <loc>https://blog.offensive32.com/p/do-you-still-need-to-learn-programming-when-ai-writes-better-code/</loc>
     <lastmod>2026-09-08</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.offensive32.com/p/php2shell-vulnerability-research-poc-cve-2026-109618/</loc>
+    <lastmod>2026-10-24</lastmod>
   </url>
 </urlset>
